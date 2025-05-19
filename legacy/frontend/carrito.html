@@ -1,0 +1,50 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Carrito de Compras</title>
+    <link rel="stylesheet" href="styles.css">
+</head>
+<body>
+    <div class="container">
+        <h2>Productos Disponibles</h2>
+        <table id="cartTable">
+            <thead>
+                <tr>
+                    <th>Producto</th>
+                    <th>Descripción</th>
+                    <th>Precio</th>
+                    <th>Stock</th>
+                    <th>Acciones</th>
+                </tr>
+            </thead>
+            <tbody>
+                <!-- Los productos disponibles se cargarán aquí dinámicamente -->
+            </tbody>
+        </table>
+
+        <h2>Resumen de Compra</h2>
+        <table id="summaryTable">
+            <thead>
+                <tr>
+                    <th>Producto</th>
+                    <th>Cantidad</th>
+                    <th>Precio Unitario</th>
+                    <th>Subtotal</th>
+                    <th>Acciones</th>
+                </tr>
+            </thead>
+            <tbody>
+                <!-- Los productos seleccionados se cargarán aquí dinámicamente -->
+            </tbody>
+        </table>
+
+        <div style="text-align: right; margin-top: 20px;">
+            <h3>Total: $<span id="totalPrice">0.00</span></h3>
+            <button id="finalizePurchase" class="btn-submit">Finalizar Compra</button>
+        </div>
+    </div>
+    <script src="carrito.js"></script>
+</body>
+</html>

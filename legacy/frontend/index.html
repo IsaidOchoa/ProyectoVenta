@@ -1,0 +1,76 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Gestión de Productos</title>
+    <link rel="stylesheet" href="styles.css">
+</head>
+<body>
+    <div class="container">
+        <!-- Enlace al carrito -->
+        <div style="text-align: right; margin-bottom: 20px;">
+            <a href="carrito.html" class="btn-submit" style="text-decoration: none; padding: 10px;">Ir al Carrito</a>
+        </div>
+
+        <!-- Formulario para crear productos -->
+        <div class="column">
+            <h2>Crear Producto</h2>
+            <form id="productForm">
+                <div class="form-group">
+                    <label for="nombre_producto">Nombre:</label>
+                    <input type="text" id="nombre" placeholder="Ej: Televisor" required>
+                </div>
+                <div class="form-group">
+                    <label for="descripcion">Descripción:</label>
+                    <textarea id="descripcion" placeholder="Ej: Televisor 4K de 55 pulgadas" required></textarea>
+                </div>
+                <div class="form-group">
+                    <label for="precio">Precio:</label>
+                    <input type="number" id="precio" step="0.01" placeholder="Ej: 499.99" required>
+                </div>
+                <div class="form-group">
+                    <label for="stock">Stock:</label>
+                    <input type="number" id="stock" placeholder="Ej: 10" required>
+                </div>
+                <div class="form-group">
+                    <label for="id_categoria">Categoría:</label>
+                    <select id="id_categoria" required>
+                        <!-- Categorías dinámicas -->
+                    </select>
+                </div>
+                <div class="form-group">
+                    <label for="id_proveedor">Proveedor:</label>
+                    <select id="id_proveedor" required>
+                        <!-- Proveedores dinámicos -->
+                    </select>
+                </div>
+                <button type="submit" class="btn-submit">Crear Producto</button>
+            </form>
+        </div>
+
+        <!-- Lista de productos -->
+        <div class="column">
+            <h2>Lista de Productos</h2>
+            <input type="text" id="searchInput" placeholder="Buscar por Nombre o ID">
+            <table id="productTable">
+                <thead>
+                    <tr>
+                        <th>ID</th>
+                        <th>Nombre</th>
+                        <th>Descripción</th>
+                        <th>Precio</th>
+                        <th>Stock</th>
+                        <th>Categoría</th>
+                        <th>Proveedor</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    <!-- Productos dinámicos -->
+                </tbody>
+            </table>
+        </div>
+    </div>
+    <script src="app.js"></script>
+</body>
+</html>
