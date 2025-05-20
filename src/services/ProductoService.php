@@ -1,6 +1,6 @@
 <?php
 require_once __DIR__ . '/../config/db.php';
-$db = (new Database())->getConnection();
+//$db = (new Database())->getConnection();
 class ProductoService {
     public static function actualizarStock($db, $id, $cantidad) {
         

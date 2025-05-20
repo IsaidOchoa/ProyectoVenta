@@ -6,8 +6,6 @@ error_reporting(E_ALL);
 header("Access-Control-Allow-Origin: *");
 require_once __DIR__ . '/../controllers/productosController.php';
 require_once __DIR__ . '/../../vendor/autoload.php';
-
-// Incluye tus middlewares aquí si los necesitas
 require_once __DIR__ . '/../../middleware/AuthMiddleware.php';
 require_once __DIR__ . '/../../middleware/Cors.php';
 require_once __DIR__ . '/../../middleware/LoggingMiddleware.php';

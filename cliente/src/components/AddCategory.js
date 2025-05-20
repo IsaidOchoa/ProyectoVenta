@@ -10,10 +10,10 @@ function AddCategory({ onBack }) {
       setMensaje('El nombre es obligatorio');
       return;
     }
-    const res = await fetch('http://localhost/ProyectoVenta/public/api/categorias/agregar', {
+    const res = await fetch('http://localhost/ProyectoVenta/src/services/CategoriaService.php', {
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify({ nombre })
+      body: JSON.stringify({ nombre_categoria: nombre })
     });
     const result = await res.json();
     setMensaje(result.success ? 'Categoría agregada correctamente' : (result.message || 'Error al agregar categoría'));

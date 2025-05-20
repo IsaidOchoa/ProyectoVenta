@@ -1,11 +1,11 @@
 <?php
 // Configuración de errores
-ini_set('display_errors', 1);
+//ini_set('display_errors', 1);
 ini_set('display_startup_errors', 1);
 error_reporting(E_ALL);
 
 // Forzar log de errores a un archivo específico
-ini_set('log_errors', 1);
+//ini_set('log_errors', 1);
 ini_set('error_log', __DIR__ . '/php_error.log');
 
 // Verificar si el archivo de rutas existe
@@ -29,5 +29,5 @@ require_once __DIR__ . '/vendor/autoload.php';
 
 // No generar ni mostrar el token JWT aquí
 
-echo "INICIO INDEX<br>";
+//echo "INICIO INDEX<br>";
 ?>

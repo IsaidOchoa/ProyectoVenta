@@ -1,10 +1,11 @@
 <?php
 require_once __DIR__ . '/../services/ProductoService.php';
-require_once __DIR__ . '/../config/db.php';
+//require_once __DIR__ . '/../config/db.php';
 
 class CategoriasController {
+    
     public static function index() {
-        echo "ENTRA CATEGORIAS<br>";
+        //echo "ENTRA CATEGORIAS<br>";
         try {
             $db = (new Database())->getConnection();
             $categorias = ProductoService::obtenerCategorias($db);
@@ -17,4 +18,3 @@ class CategoriasController {
     }
     // Métodos create, update, delete pueden ir aquí si los necesitas
 }
-?>

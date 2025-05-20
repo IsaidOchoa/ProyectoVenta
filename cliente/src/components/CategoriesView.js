@@ -8,7 +8,7 @@ function CategoriesView({ onBack }) {
   const [categorias, setCategorias] = useState([]);
 
   useEffect(() => {
-    fetch('http://localhost/ProyectoVenta/public/api/categorias')
+    fetch('http://localhost/ProyectoVenta/src/services/CategoriaService.php')
       .then(res => res.text())
       .then(text => {
         try {

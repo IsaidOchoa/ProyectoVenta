@@ -7,7 +7,7 @@ function EditCategories({ onBack }) {
   const [mensaje, setMensaje] = useState('');
 
   useEffect(() => {
-    fetch('http://localhost/ProyectoVenta/public/api/categorias')
+    fetch('http://localhost/ProyectoVenta/src/services/CategoriaService.php')
       .then(res => res.json())
       .then(data => setCategorias(data));
   }, []);
@@ -19,10 +19,10 @@ function EditCategories({ onBack }) {
   };
 
   const handleSave = async () => {
-    const res = await fetch(`http://localhost/ProyectoVenta/public/api/categorias/editar/${editId}`, {
-      method: 'PUT',
+    const res = await fetch('http://localhost/ProyectoVenta/src/services/CategoriaService.php', {
+      method: 'POST',
       headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify({ nombre })
+      body: JSON.stringify({ id: editId, nombre_categoria: nombre, _method: 'PUT' })
     });
     const result = await res.json();
     setMensaje(result.success ? 'Categoría actualizada' : (result.message || 'Error al actualizar'));
@@ -32,11 +32,29 @@ function EditCategories({ onBack }) {
     }
   };
 
+  const handleDelete = async (cat) => {
+    const res = await fetch('http://localhost/ProyectoVenta/src/services/CategoriaService.php', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ id: cat.id, _method: 'DELETE' })
+    });
+    let result = {};
+    try {
+      result = await res.json();
+    } catch {
+      result = { success: false, message: 'Respuesta vacía del servidor' };
+    }
+    setMensaje(result.success ? 'Categoría eliminada' : (result.message || 'Error al eliminar'));
+    if (result.success) {
+      setCategorias(categorias.filter(c => c.id !== cat.id));
+    }
+  };
+
   return (
     <div style={{ maxWidth: 600, margin: '2rem auto', background: '#fff', borderRadius: 10, boxShadow: '0 2px 8px rgba(0,0,0,0.08)', padding: '2rem' }}>
       <button onClick={onBack} style={{ background: 'none', border: 'none', cursor: 'pointer', marginBottom: 16, fontSize: 18 }}>&larr; Volver</button>
       <h2>Editar categorías</h2>
-      {mensaje && <div style={{ marginBottom: 16, color: mensaje.includes('actualizada') ? 'green' : 'red' }}>{mensaje}</div>}
+      {mensaje && <div style={{ marginBottom: 16, color: mensaje.includes('actualizada') || mensaje.includes('eliminada') ? 'green' : 'red' }}>{mensaje}</div>}
       <table style={{ width: '100%', borderCollapse: 'collapse' }}>
         <thead>
           <tr style={{ background: '#f4f4f4' }}>
@@ -59,7 +77,10 @@ function EditCategories({ onBack }) {
                     <button onClick={() => setEditId(null)} style={{ background: '#eee', border: 'none', borderRadius: 4, padding: '0.3rem 0.8rem', cursor: 'pointer' }}>Cancelar</button>
                   </>
                 ) : (
-                  <button onClick={() => startEdit(cat)} style={{ background: '#0071ce', color: '#fff', border: 'none', borderRadius: 4, padding: '0.3rem 0.8rem', cursor: 'pointer' }}>Editar</button>
+                  <>
+                    <button onClick={() => startEdit(cat)} style={{ background: '#0071ce', color: '#fff', border: 'none', borderRadius: 4, padding: '0.3rem 0.8rem', cursor: 'pointer' }}>Editar</button>
+                    <button onClick={() => handleDelete(cat)} style={{ background: '#FF0000', color: '#fff', border: 'none', borderRadius: 4, padding: '0.3rem 0.8rem', cursor: 'pointer' }}>Eliminar</button>
+                  </>
                 )}
               </td>
             </tr>
