@@ -1,0 +1,145 @@
+.App {
+  text-align: center;
+}
+
+.App-logo {
+  height: 40vmin;
+  pointer-events: none;
+}
+
+@media (prefers-reduced-motion: no-preference) {
+  .App-logo {
+    animation: App-logo-spin infinite 20s linear;
+  }
+}
+
+.App-header {
+  background-color: #282c34;
+  min-height: 100vh;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  font-size: calc(10px + 2vmin);
+  color: white;
+}
+
+.App-link {
+  color: #61dafb;
+}
+
+@keyframes App-logo-spin {
+  from {
+    transform: rotate(0deg);
+  }
+  to {
+    transform: rotate(360deg);
+  }
+}
+
+/* Estilos generales */
+body {
+    margin: 0;
+    font-family: Arial, sans-serif;
+    background: #f4f4f4;
+}
+
+/* Navbar */
+.navbar {
+    background: #3a6ea5; /* azul más claro */
+    color: #fff;
+    padding: 1.2rem 1rem; /* más alto */
+}
+
+.navbar-content {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+}
+
+.navbar-logo img {
+    height: 40px;
+}
+
+.navbar-actions .btn {
+    background: transparent;
+    color: #fff;
+    border: none;
+    margin-left: 1rem;
+    font-size: 1.1rem;
+    cursor: pointer;
+}
+
+/* Tarjetas de producto */
+.product-card {
+    background: #fff;
+    border-radius: 8px;
+    box-shadow: 0 2px 8px rgba(0,0,0,0.08);
+    overflow: hidden;
+    display: flex;
+    flex-direction: column;
+    transition: transform 0.2s;
+}
+
+.product-card:hover {
+    transform: translateY(-5px) scale(1.02);
+}
+
+.product-card img {
+    width: 100%;
+    height: 180px;
+    object-fit: contain;
+    background: #f4f4f4; /* Opcional: color de fondo si la imagen no llena el cuadro */
+}
+
+.product-info {
+    padding: 1rem;
+}
+
+.product-info h3 {
+    margin: 0 0 0.5rem 0;
+    font-size: 1.2rem;
+}
+
+.product-info .price {
+    color: #0071ce;
+    font-weight: bold;
+    margin-bottom: 0.5rem;
+}
+
+.product-info .provider {
+    font-size: 0.95rem;
+    color: #555;
+    margin-bottom: 0.5rem;
+}
+
+.product-info .description {
+    font-size: 0.95rem;
+    color: #333;
+}
+
+.product-info button {
+    background: #0071ce;
+    color: #fff;
+    border: none;
+    padding: 0.5rem 1rem;
+    border-radius: 4px;
+    cursor: pointer;
+    margin-top: 0.5rem;
+}
+
+/* Contenedor de productos */
+.products-container {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(250px, 1fr));
+    gap: 1.5rem;
+    padding: 2rem;
+}
+
+/* Responsivo */
+@media (max-width: 600px) {
+    .products-container {
+        padding: 1rem;
+        gap: 1rem;
+    }
+}
