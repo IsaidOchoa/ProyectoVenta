@@ -1,0 +1,29 @@
+# .gitignore para ProyectoVenta
+
+# Node (React frontend)
+cliente/node_modules/
+cliente/build/
+cliente/.env
+cliente/.DS_Store
+
+# Composer (PHP backend)
+vendor/
+composer.lock
+
+# Logs y temporales
+logs/
+*.log
+
+# Archivos del sistema operativo
+.DS_Store
+Thumbs.db
+
+# Archivos de entorno
+.env
+
+# Archivos de VS Code
+.vscode/
+
+# Otros archivos temporales
+*.tmp
+*.swp
