@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 
 function AddProduct({ onBack }) {
   const [form, setForm] = useState({
@@ -11,13 +11,35 @@ function AddProduct({ onBack }) {
     proveedor: ''
   });
   const [mensaje, setMensaje] = useState('');
+  const [categorias, setCategorias] = useState([]);
+  const [proveedores, setProveedores] = useState([]);
+
+  useEffect(() => {
+    fetch('http://localhost/ProyectoVenta/src/services/CategoriaService.php')
+      .then(res => res.json())
+      .then(data => setCategorias(Array.isArray(data) ? data : []));
+    fetch('http://localhost/ProyectoVenta/src/services/ProveedorService.php')
+      .then(res => res.json())
+      .then(data => setProveedores(Array.isArray(data) ? data : []));
+  }, []);
 
   const handleChange = e => {
     const { name, value, files } = e.target;
-    setForm(f => ({
-      ...f,
-      [name]: files ? files[0] : value
-    }));
+    if (name === 'imagen' && files && files[0]) {
+      const file = files[0];
+      if (!file.name.toLowerCase().endsWith('.jpg')) {
+        setMensaje('Solo se permiten archivos .jpg');
+        setForm(f => ({ ...f, imagen: null }));
+        return;
+      }
+      setMensaje('');
+      setForm(f => ({ ...f, imagen: file }));
+    } else {
+      setForm(f => ({
+        ...f,
+        [name]: value
+      }));
+    }
   };
 
   const handleSubmit = async e => {
@@ -26,10 +48,18 @@ function AddProduct({ onBack }) {
       setMensaje('Todos los campos son obligatorios');
       return;
     }
+    if (!form.imagen) {
+      setMensaje('Debes seleccionar una imagen .jpg');
+      return;
+    }
     const data = new FormData();
     Object.entries(form).forEach(([k, v]) => data.append(k, v));
-    const res = await fetch('http://localhost/ProyectoVenta/public/api/productos/agregar', {
+    const token = localStorage.getItem('token');
+    const res = await fetch('http://localhost/ProyectoVenta/public/api/productos/Crear', {
       method: 'POST',
+      headers: {
+        'Authorization': `Bearer ${token}`
+      },
       body: data
     });
     const result = await res.json();
@@ -46,9 +76,35 @@ function AddProduct({ onBack }) {
         <textarea name="descripcion" placeholder="Descripción" value={form.descripcion} onChange={handleChange} style={inputStyle} />
         <input name="precio" type="number" placeholder="Precio" value={form.precio} onChange={handleChange} style={inputStyle} />
         <input name="stock" type="number" placeholder="Stock" value={form.stock} onChange={handleChange} style={inputStyle} />
-        <input name="imagen" type="file" accept="image/*" onChange={handleChange} style={inputStyle} />
-        <input name="categoria" placeholder="Categoría" value={form.categoria} onChange={handleChange} style={inputStyle} />
-        <input name="proveedor" placeholder="Proveedor" value={form.proveedor} onChange={handleChange} style={inputStyle} />
+        <input
+          name="imagen"
+          type="file"
+          accept=".jpg"
+          onChange={handleChange}
+          style={inputStyle}
+        />
+        <select
+          name="categoria"
+          value={form.categoria}
+          onChange={handleChange}
+          style={inputStyle}
+        >
+          <option value="">Selecciona una categoría</option>
+          {categorias.map(cat => (
+            <option key={cat.id} value={cat.id}>{cat.nombre_categoria || cat.nombre}</option>
+          ))}
+        </select>
+        <select
+          name="proveedor"
+          value={form.proveedor}
+          onChange={handleChange}
+          style={inputStyle}
+        >
+          <option value="">Selecciona un proveedor</option>
+          {proveedores.map(prov => (
+            <option key={prov.id} value={prov.id}>{prov.nombre}</option>
+          ))}
+        </select>
         <button type="submit" style={{
           background: '#FFD600', color: '#222', border: 'none', borderRadius: 6, padding: '0.8rem', fontWeight: 'bold', cursor: 'pointer'
         }}>Agregar</button>

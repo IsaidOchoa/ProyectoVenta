@@ -1,6 +1,16 @@
 <?php
 require_once __DIR__ . '/../config/db.php';
-//$db = (new Database())->getConnection();
+
+header('Content-Type: application/json');
+header("Access-Control-Allow-Origin: *");
+header("Access-Control-Allow-Headers: Authorization, Content-Type");
+header("Access-Control-Allow-Methods: GET, POST, PUT, DELETE, OPTIONS");
+
+if ($_SERVER['REQUEST_METHOD'] === 'OPTIONS') {
+    http_response_code(200);
+    exit;
+}
+
 class ProductoService {
     public static function actualizarStock($db, $id, $cantidad) {
         
@@ -44,12 +54,11 @@ class ProductoService {
         }
     }
 
-    public static function crearProducto($db,$nombre, $descripcion, $precio, $stock, $categoria_id, $proveedor_id) {
-        
-        $query = "INSERT INTO productos (nombre, descripcion, precio, stock, categoria_id, proveedor_id) 
-                  VALUES (?, ?, ?, ?, ?, ?)";
+    public static function crearProducto($nombre, $descripcion, $precio, $stock, $categoria_id, $proveedor_id, $rutaImagen) {
+        $db = (new Database())->getConnection();
+        $query = "INSERT INTO productos (nombre, descripcion, precio, stock, categoria_id, proveedor_id, imagen) VALUES (?, ?, ?, ?, ?, ?, ?)";
         $stmt = $db->prepare($query);
-        return $stmt->execute([$nombre, $descripcion, $precio, $stock, $categoria_id, $proveedor_id]);
+        return $stmt->execute([$nombre, $descripcion, $precio, $stock, $categoria_id, $proveedor_id, $rutaImagen]);
     }
 
     public static function actualizarProducto($db,$id, $nombre, $descripcion, $precio, $stock, $categoria_id, $proveedor_id) {

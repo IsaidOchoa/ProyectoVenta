@@ -68,20 +68,10 @@ function EditCategories({ onBack }) {
               <td>
                 {editId === cat.id ? (
                   <input value={nombre} onChange={e => setNombre(e.target.value)} />
-                ) : cat.nombre}
+                ) : cat.nombre_categoria}
               </td>
               <td>
-                {editId === cat.id ? (
-                  <>
-                    <button onClick={handleSave} style={{ marginRight: 8, background: '#FFD600', border: 'none', borderRadius: 4, padding: '0.3rem 0.8rem', cursor: 'pointer' }}>Guardar</button>
-                    <button onClick={() => setEditId(null)} style={{ background: '#eee', border: 'none', borderRadius: 4, padding: '0.3rem 0.8rem', cursor: 'pointer' }}>Cancelar</button>
-                  </>
-                ) : (
-                  <>
-                    <button onClick={() => startEdit(cat)} style={{ background: '#0071ce', color: '#fff', border: 'none', borderRadius: 4, padding: '0.3rem 0.8rem', cursor: 'pointer' }}>Editar</button>
-                    <button onClick={() => handleDelete(cat)} style={{ background: '#FF0000', color: '#fff', border: 'none', borderRadius: 4, padding: '0.3rem 0.8rem', cursor: 'pointer' }}>Eliminar</button>
-                  </>
-                )}
+                {/* Botones de editar/eliminar */}
               </td>
             </tr>
           ))}

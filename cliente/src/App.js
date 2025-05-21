@@ -42,6 +42,16 @@ function App() {
   }, []);
 
   useEffect(() => {
+    fetch('http://localhost/ProyectoVenta/public/api/auth/token')
+      .then(res => res.json())
+      .then(data => {
+        if (data.token) {
+          localStorage.setItem('token', data.token);
+        }
+      });
+  }, []);
+
+  useEffect(() => {
     if (showHistory) {
       // Simulación de historial de compras
       setHistorial([
