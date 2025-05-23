@@ -15,10 +15,10 @@ function AddProduct({ onBack }) {
   const [proveedores, setProveedores] = useState([]);
 
   useEffect(() => {
-    fetch('http://localhost/ProyectoVenta/src/services/CategoriaService.php')
+    fetch('http://localhost/ProyectoVenta/public/api/categorias')
       .then(res => res.json())
       .then(data => setCategorias(Array.isArray(data) ? data : []));
-    fetch('http://localhost/ProyectoVenta/src/services/ProveedorService.php')
+    fetch('http://localhost/ProyectoVenta/public/api/proveedores')
       .then(res => res.json())
       .then(data => setProveedores(Array.isArray(data) ? data : []));
   }, []);
@@ -27,8 +27,9 @@ function AddProduct({ onBack }) {
     const { name, value, files } = e.target;
     if (name === 'imagen' && files && files[0]) {
       const file = files[0];
-      if (!file.name.toLowerCase().endsWith('.jpg')) {
-        setMensaje('Solo se permiten archivos .jpg');
+      const ext = file.name.toLowerCase().split('.').pop();
+      if (!['jpg', 'jpeg'].includes(ext)) {
+        setMensaje('Solo se permiten archivos .jpg o .jpeg');
         setForm(f => ({ ...f, imagen: null }));
         return;
       }
@@ -79,7 +80,7 @@ function AddProduct({ onBack }) {
         <input
           name="imagen"
           type="file"
-          accept=".jpg"
+          accept=".jpg,.jpeg"
           onChange={handleChange}
           style={inputStyle}
         />
@@ -109,7 +110,14 @@ function AddProduct({ onBack }) {
           background: '#FFD600', color: '#222', border: 'none', borderRadius: 6, padding: '0.8rem', fontWeight: 'bold', cursor: 'pointer'
         }}>Agregar</button>
       </form>
-      {mensaje && <div style={{ marginTop: 16, color: mensaje.includes('correctamente') ? 'green' : 'red' }}>{mensaje}</div>}
+      {mensaje && (
+        <div style={{
+          marginTop: 16,
+          color: mensaje.toLowerCase().includes('exitosamente') || mensaje.toLowerCase().includes('correctamente') ? 'green' : 'red'
+        }}>
+          {mensaje}
+        </div>
+      )}
     </div>
   );
 }

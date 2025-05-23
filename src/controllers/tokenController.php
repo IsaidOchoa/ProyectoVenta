@@ -9,13 +9,14 @@ use Firebase\JWT\JWT;
 
 class tokenController {
     public static function generarToken() {
-        echo "PRUEBA"; // <-- ¿Ves esto en la respuesta?
-        $key = "clave_secreta"; // Cambia esto por tu clave secreta
+        $key = "clave_secreta"; // Usa la misma clave
         $payload = [
-            "iss" => "http://localhost",
-            "aud" => "http://localhost",
             "iat" => time(),
-            "exp" => time() + (60 * 60) // 1 hora de expiración
+            "exp" => time() + 3600,
+            "data" => [
+                "user_id" => 1, // Puedes poner aquí los datos del usuario autenticado
+                "rol" => "admin"
+            ]
         ];
 
         $jwt = JWT::encode($payload, $key, 'HS256');

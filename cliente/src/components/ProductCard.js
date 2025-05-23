@@ -18,7 +18,7 @@ function ProductCard({ producto, onAddToCart }) {
           Sin stock
         </div>
       )}
-      <img src={`http://localhost/ProyectoVenta/public/${producto.imagen}`} alt={producto.nombre} />
+      <img src={`http://localhost/ProyectoVenta/public/uploads/${producto.imagen}`} alt={producto.nombre} />
       <div className="product-info">
         <h3>{producto.nombre}</h3>
         <p className="price">${producto.precio}</p>

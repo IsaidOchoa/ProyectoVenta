@@ -49,8 +49,14 @@ class ProductosController {
 
         // Manejar la imagen
         $imagen = $_FILES['imagen'];
-        $nombreImagen = uniqid() . '.jpg';
-        $rutaDestino = __DIR__ . '/../../uploads/' . $nombreImagen;
+        $ext = strtolower(pathinfo($imagen['name'], PATHINFO_EXTENSION));
+        if (!in_array($ext, ['jpg', 'jpeg'])) {
+            echo json_encode(["error" => "Solo se permiten imágenes JPG o JPEG"]);
+            http_response_code(400);
+            return;
+        }
+        $nombreImagen = uniqid() . '.' . $ext;
+        $rutaDestino = __DIR__ . '/../../public/uploads/' . $nombreImagen;
 
         if (!move_uploaded_file($imagen['tmp_name'], $rutaDestino)) {
             echo json_encode(["error" => "Error al subir la imagen"]);

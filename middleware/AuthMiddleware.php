@@ -1,8 +1,10 @@
 <?php
 require_once __DIR__ . '/../vendor/autoload.php';
+use Firebase\JWT\JWT;
+use Firebase\JWT\Key;
 
 class AuthMiddleware {
-    private static $secretKey = "your-secret-key";
+    private static $secretKey = "clave_secreta"; // Cambia esto por tu clave secreta
 
     public static function generarToken($data) {
         $playload = [
