@@ -8,8 +8,10 @@ function ProvidersView({ onBack }) {
   const [nuevoNombre, setNuevoNombre] = useState('');
   const [agregando, setAgregando] = useState(false);
 
+  const API_URL = 'http://localhost/ProyectoVenta/public/api/proveedores';
+
   useEffect(() => {
-    fetch('http://localhost/ProyectoVenta/src/services/ProveedorService.php')
+    fetch(API_URL)
       .then(res => res.json())
       .then(data => setProveedores(Array.isArray(data) ? data : []));
   }, []);
@@ -21,34 +23,32 @@ function ProvidersView({ onBack }) {
   };
 
   const handleSave = async (prov) => {
-    const res = await fetch('http://localhost/ProyectoVenta/src/services/ProveedorService.php', {
-      method: 'POST',
+    const res = await fetch(`${API_URL}/Modificar/${prov.id}`, {
+      method: 'PUT',
       headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify({ id: prov.id, nombre: editNombre, _method: 'PUT' })
+      body: JSON.stringify({ nombre: editNombre, direccion: prov.direccion || '', telefono: prov.telefono || '' })
     });
     const result = await res.json();
-    if (result.success) {
+    if (result.message) {
       setProveedores(proveedores.map(p => p.id === prov.id ? { ...p, nombre: editNombre } : p));
       setMensaje('Proveedor actualizado');
       setEditId(null);
     } else {
-      setMensaje(result.message || 'Error al actualizar');
+      setMensaje(result.error || 'Error al actualizar');
     }
   };
 
   const handleDelete = async (prov) => {
     if (!window.confirm(`¿Seguro que deseas eliminar el proveedor "${prov.nombre}"?`)) return;
-    const res = await fetch('http://localhost/ProyectoVenta/src/services/ProveedorService.php', {
-      method: 'POST',
-      headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify({ id: prov.id, _method: 'DELETE' })
+    const res = await fetch(`${API_URL}/Eliminar/${prov.id}`, {
+      method: 'DELETE'
     });
     const result = await res.json();
-    if (result.success) {
+    if (result.message) {
       setProveedores(proveedores.filter(p => p.id !== prov.id));
       setMensaje(`El proveedor "${prov.nombre}" ha sido eliminado`);
     } else {
-      setMensaje(result.message || 'Error al eliminar');
+      setMensaje(result.error || 'Error al eliminar');
     }
   };
 
@@ -59,21 +59,21 @@ function ProvidersView({ onBack }) {
       return;
     }
     setAgregando(true);
-    const res = await fetch('http://localhost/ProyectoVenta/src/services/ProveedorService.php', {
+    const res = await fetch(`${API_URL}/Crear`, {
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify({ nombre: nuevoNombre })
+      body: JSON.stringify({ nombre: nuevoNombre, direccion: '', telefono: '' })
     });
     const result = await res.json();
     setAgregando(false);
-    if (result.success) {
-      fetch('http://localhost/ProyectoVenta/src/services/ProveedorService.php')
+    if (result.message) {
+      fetch(API_URL)
         .then(res => res.json())
         .then(data => setProveedores(Array.isArray(data) ? data : []));
       setMensaje('Proveedor agregado');
       setNuevoNombre('');
     } else {
-      setMensaje(result.message || 'Error al agregar');
+      setMensaje(result.error || 'Error al agregar');
     }
   };
 

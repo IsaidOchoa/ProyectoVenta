@@ -8,8 +8,11 @@ function CategoriesView({ onBack }) {
   const [nuevoNombre, setNuevoNombre] = useState('');
   const [agregando, setAgregando] = useState(false);
 
+  // Cambia la URL base de la API
+  const API_URL = 'http://localhost/ProyectoVenta/public/api/categorias';
+
   useEffect(() => {
-    fetch('http://localhost/ProyectoVenta/src/services/CategoriaService.php')
+    fetch(API_URL)
       .then(res => res.json())
       .then(data => setCategorias(Array.isArray(data) ? data : []));
   }, []);
@@ -21,34 +24,32 @@ function CategoriesView({ onBack }) {
   };
 
   const handleSave = async (cat) => {
-    const res = await fetch('http://localhost/ProyectoVenta/src/services/CategoriaService.php', {
-      method: 'POST',
+    const res = await fetch(`${API_URL}/Modificar/${cat.id}`, {
+      method: 'PUT',
       headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify({ id: cat.id, nombre_categoria: editNombre, _method: 'PUT' })
+      body: JSON.stringify({ nombre_categoria: editNombre })
     });
     const result = await res.json();
-    if (result.success) {
+    if (result.message) {
       setCategorias(categorias.map(c => c.id === cat.id ? { ...c, nombre_categoria: editNombre } : c));
       setMensaje('Categoría actualizada');
       setEditId(null);
     } else {
-      setMensaje(result.message || 'Error al actualizar');
+      setMensaje(result.error || 'Error al actualizar');
     }
   };
 
   const handleDelete = async (cat) => {
     if (!window.confirm(`¿Seguro que deseas eliminar la categoría "${cat.nombre_categoria}"?`)) return;
-    const res = await fetch('http://localhost/ProyectoVenta/src/services/CategoriaService.php', {
-      method: 'POST',
-      headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify({ id: cat.id, _method: 'DELETE' })
+    const res = await fetch(`${API_URL}/Eliminar/${cat.id}`, {
+      method: 'DELETE'
     });
     const result = await res.json();
-    if (result.success) {
+    if (result.message) {
       setCategorias(categorias.filter(c => c.id !== cat.id));
       setMensaje(`La categoría "${cat.nombre_categoria}" ha sido eliminada`);
     } else {
-      setMensaje(result.message || 'Error al eliminar');
+      setMensaje(result.error || 'Error al eliminar');
     }
   };
 
@@ -59,22 +60,22 @@ function CategoriesView({ onBack }) {
       return;
     }
     setAgregando(true);
-    const res = await fetch('http://localhost/ProyectoVenta/src/services/CategoriaService.php', {
+    const res = await fetch(`${API_URL}/Crear`, {
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },
       body: JSON.stringify({ nombre_categoria: nuevoNombre })
     });
     const result = await res.json();
     setAgregando(false);
-    if (result.success) {
+    if (result.message) {
       // Recargar categorías
-      fetch('http://localhost/ProyectoVenta/src/services/CategoriaService.php')
+      fetch(API_URL)
         .then(res => res.json())
         .then(data => setCategorias(Array.isArray(data) ? data : []));
       setMensaje('Categoría agregada');
       setNuevoNombre('');
     } else {
-      setMensaje(result.message || 'Error al agregar');
+      setMensaje(result.error || 'Error al agregar');
     }
   };
 

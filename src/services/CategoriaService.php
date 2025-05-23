@@ -1,84 +1,62 @@
 <?php
 require_once __DIR__ . '/../config/db.php';
 
-header('Content-Type: application/json');
-header("Access-Control-Allow-Origin: *");
-header('Access-Control-Allow-Methods: POST, GET, OPTIONS');
-header('Access-Control-Allow-Headers: Content-Type');
-
-if ($_SERVER['REQUEST_METHOD'] === 'OPTIONS') {
-    http_response_code(200);
-    exit;
-}
-
-$input = json_decode(file_get_contents('php://input'), true);
-
-if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($input['_method'])) {
-    if ($input['_method'] === 'PUT') {
-        // Actualizar
-        if (!isset($input['id']) || !isset($input['nombre_categoria'])) {
-            http_response_code(400);
-            echo json_encode(['success' => false, 'message' => 'Datos incompletos']);
-            exit;
-        }
+class CategoriaService {
+    // Obtener todas las categorías
+    public static function obtenerTodas($db) {
         try {
-            $db = (new Database())->getConnection();
+            $query = "SELECT id, nombre_categoria FROM categorias";
+            $stmt = $db->prepare($query);
+            $stmt->execute();
+            return $stmt->fetchAll(PDO::FETCH_ASSOC);
+        } catch (Exception $e) {
+            throw new Exception("Error al obtener las categorías: " . $e->getMessage());
+        }
+    }
+
+    // Obtener una categoría por ID
+    public static function obtenerPorId($db, $id) {
+        try {
+            $query = "SELECT id, nombre_categoria FROM categorias WHERE id = ?";
+            $stmt = $db->prepare($query);
+            $stmt->execute([$id]);
+            return $stmt->fetch(PDO::FETCH_ASSOC);
+        } catch (Exception $e) {
+            throw new Exception("Error al obtener la categoría con ID $id: " . $e->getMessage());
+        }
+    }
+
+    // Crear una nueva categoría
+    public static function crearCategoria($db, $nombre_categoria) {
+        try {
+            $query = "INSERT INTO categorias (nombre_categoria) VALUES (?)";
+            $stmt = $db->prepare($query);
+            return $stmt->execute([$nombre_categoria]);
+        } catch (Exception $e) {
+            throw new Exception("Error al crear la categoría: " . $e->getMessage());
+        }
+    }
+
+    // Actualizar una categoría
+    public static function actualizarCategoria($db, $id, $nombre_categoria) {
+        try {
             $query = "UPDATE categorias SET nombre_categoria = ? WHERE id = ?";
             $stmt = $db->prepare($query);
-            $stmt->execute([$input['nombre_categoria'], $input['id']]);
-            echo json_encode(['success' => true]);
+            return $stmt->execute([$nombre_categoria, $id]);
         } catch (Exception $e) {
-            http_response_code(500);
-            echo json_encode(['success' => false, 'message' => $e->getMessage()]);
+            throw new Exception("Error al actualizar la categoría con ID $id: " . $e->getMessage());
         }
-        exit;
     }
-    if ($input['_method'] === 'DELETE') {
-        // Eliminar
-        if (!isset($input['id'])) {
-            http_response_code(400);
-            echo json_encode(['success' => false, 'message' => 'Falta el id']);
-            exit;
-        }
+
+    // Eliminar una categoría
+    public static function eliminarCategoria($db, $id) {
         try {
-            $db = (new Database())->getConnection();
             $query = "DELETE FROM categorias WHERE id = ?";
             $stmt = $db->prepare($query);
-            $stmt->execute([$input['id']]);
-            echo json_encode(['success' => true]);
+            return $stmt->execute([$id]);
         } catch (Exception $e) {
-            http_response_code(500);
-            echo json_encode(['success' => false, 'message' => $e->getMessage()]);
+            throw new Exception("Error al eliminar la categoría con ID $id: " . $e->getMessage());
         }
-        exit;
     }
-} elseif ($_SERVER['REQUEST_METHOD'] === 'POST') {
-    if (!isset($input['nombre_categoria'])) {
-        http_response_code(400);
-        echo json_encode(['success' => false, 'message' => 'Falta el nombre de la categoría']);
-        exit;
-    }
-    try {
-        $db = (new Database())->getConnection();
-        $query = "INSERT INTO categorias (nombre_categoria) VALUES (?)";
-        $stmt = $db->prepare($query);
-        $stmt->execute([$input['nombre_categoria']]);
-        echo json_encode(['success' => true]);
-    } catch (Exception $e) {
-        http_response_code(500);
-        echo json_encode(['success' => false, 'message' => $e->getMessage()]);
-    }
-    exit;
 }
-
-try {
-    $db = (new Database())->getConnection();
-    $query = "SELECT id, nombre_categoria FROM categorias";
-    $stmt = $db->prepare($query);
-    $stmt->execute();
-    $categorias = $stmt->fetchAll(PDO::FETCH_ASSOC);
-    echo json_encode($categorias);
-} catch (Exception $e) {
-    http_response_code(500);
-    echo json_encode(["error" => $e->getMessage()]);
-}
+?>

@@ -33,40 +33,50 @@ LoggingMiddleware::registrarSolicitud();
 
 // Procesar solo rutas que comiencen con /api/categorias
 if (strpos($request_uri, '/api/categorias') === 0) {
-    // Obtener todas las categorías
-    if ($request_method === "GET" && ($request_uri === '/api/categorias' || $request_uri === '/api/categorias/')) {
-        CategoriasController::index();
-        exit;
-    }
-
-    // Obtener una categoría por ID
-    if ($request_method === "GET" && preg_match('#^/api/categorias/(\d+)$#', $request_uri, $matches)) {
-        $id = $matches[1];
-        CategoriasController::show($id);
-        exit;
-    }
-
-    // Crear una nueva categoría
-    if ($request_method === "POST" && ($request_uri === '/api/categorias' || $request_uri === '/api/categorias/')) {
+    // Crear categoría
+    if ($request_method === "POST" && $request_uri === '/api/categorias/Crear') {
+        // AuthMiddleware::verificarToken(); // Descomenta si quieres proteger la ruta
         CategoriasController::store();
-        exit;
     }
-
-    // Actualizar una categoría existente
-    if ($request_method === "PUT" && preg_match('#^/api/categorias/(\d+)$#', $request_uri, $matches)) {
-        $id = $matches[1];
-        CategoriasController::update($id);
-        exit;
-    }
-
-    // Eliminar una categoría
-    if ($request_method === "DELETE" && preg_match('#^/api/categorias/(\d+)$#', $request_uri, $matches)) {
-        $id = $matches[1];
+    // Eliminar categoría
+    elseif ($request_method === "DELETE" && preg_match('/\/api\/categorias\/Eliminar\/(\d+)/', $request_uri, $matches)) {
+        // AuthMiddleware::verificarToken();
+        $id = filter_var($matches[1], FILTER_VALIDATE_INT);
+        if (!$id) {
+            header("HTTP/1.1 400 Bad Request");
+            echo json_encode(["error" => "ID inválido"]);
+            exit;
+        }
         CategoriasController::destroy($id);
-        exit;
     }
-
-    // Si ninguna ruta coincide
-    header("HTTP/1.1 404 Not Found");
-    echo json_encode(["error" => "Ruta no encontrada en categorias"]);
+    // Modificar categoría
+    elseif ($request_method === "PUT" && preg_match('/\/api\/categorias\/Modificar\/(\d+)/', $request_uri, $matches)) {
+        // AuthMiddleware::verificarToken();
+        $id = filter_var($matches[1], FILTER_VALIDATE_INT);
+        if (!$id) {
+            header("HTTP/1.1 400 Bad Request");
+            echo json_encode(["error" => "ID inválido"]);
+            exit;
+        }
+        CategoriasController::update($id);
+    }
+    // Listar todas las categorías
+    elseif ($request_method === "GET" && $request_uri === '/api/categorias') {
+        CategoriasController::index();
+    }
+    // Obtener una categoría por ID
+    elseif ($request_method === "GET" && preg_match('/\/api\/categorias\/(\d+)/', $request_uri, $matches)) {
+        $id = filter_var($matches[1], FILTER_VALIDATE_INT);
+        if (!$id) {
+            header("HTTP/1.1 400 Bad Request");
+            echo json_encode(["error" => "ID inválido"]);
+            exit;
+        }
+        CategoriasController::show($id);
+    }
+    // Ruta no encontrada
+    else {
+        header("HTTP/1.1 404 Not Found");
+        echo json_encode(["error" => "Ruta no encontrada en categorias"]);
+    }
 }
