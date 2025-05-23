@@ -72,7 +72,7 @@ class ProductosController {
             $_POST['stock'],
             $_POST['categoria'],
             $_POST['proveedor'],
-            'uploads/' . $nombreImagen // ruta relativa para guardar en la BD
+            $nombreImagen // SOLO el nombre del archivo, sin 'uploads/'
         )) {
             echo json_encode(["message" => "Producto creado exitosamente"]);
         } else {
