@@ -18,8 +18,3 @@ if ($request_method === "GET" && strpos($request_uri, '/api/auth/token') !== fal
     tokenController::generarToken();
     exit;
 }
-
-// Si llega aquí, ruta no encontrada
-header("HTTP/1.1 404 Not Found");
-echo json_encode(["error" => "Ruta no encontrada en auth"]);
-exit;

@@ -3,7 +3,7 @@ class Database {
     private $host = "localhost"; // Cambia esto si tu base de datos está en otro servidor
     private $db_name = "walmart"; // Nombre de tu base de datos
     private $username = "root"; // Usuario de MySQL
-    private $password = "1234567890"; // Contraseña de MySQL
+    private $password = ""; // Contraseña de MySQL
     public $conn;
 
     public function getConnection() {
