@@ -1,6 +1,6 @@
 import React from 'react';
 
-function ProductCard({ producto, onAddToCart, enCarrito }) {
+function ProductCard({ producto, onAddToCart, enCarrito, onProductClick }) {
   return (
     <div className="product-card" style={{
       display: 'flex',
@@ -14,8 +14,9 @@ function ProductCard({ producto, onAddToCart, enCarrito }) {
       marginBottom: 24,
       opacity: producto.stock === 0 ? 0.5 : 1,
       position: 'relative',
-      overflow: 'hidden'
-    }}>
+      overflow: 'hidden',
+      cursor: onProductClick ? 'pointer' : 'default'
+    }} onClick={() => onProductClick && onProductClick(producto)}>
       {/* Sección imagen */}
       <div style={{
         flex: '0 0 150px',
@@ -87,7 +88,10 @@ function ProductCard({ producto, onAddToCart, enCarrito }) {
           ${producto.precio}
         </div>
         <button
-          onClick={() => onAddToCart(producto)}
+          onClick={e => {
+            e.stopPropagation();
+            onAddToCart(producto);
+          }}
           disabled={producto.stock === 0}
           style={{
             background: '#0071ce', // azul rey

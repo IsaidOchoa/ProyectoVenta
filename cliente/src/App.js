@@ -13,6 +13,7 @@ import EditProviders from './components/EditProviders';
 import ProvidersView from './components/ProvidersView';
 import CategoriesView from './components/CategoriesView';
 import Toast from './components/Toast';
+import ProductView from './components/ProductView';
 import './App.css';
 
 function App() {
@@ -33,6 +34,7 @@ function App() {
   const [showProvidersView, setShowProvidersView] = useState(false);
   const [showCategoriesView, setShowCategoriesView] = useState(false);
   const [toasts, setToasts] = useState([]);
+  const [selectedProduct, setSelectedProduct] = useState(null);
 
   useEffect(() => {
     fetch('http://localhost/ProyectoVenta/public/api/productos')
@@ -200,6 +202,7 @@ function App() {
   };
 
   const handleBackToHome = () => {
+    setSelectedProduct(null);
     setShowHistory(false);
     setShowCart(false);
     setShowAddProduct(false);
@@ -210,7 +213,21 @@ function App() {
     setShowEditProviders(false);
     setShowProvidersView(false);
     setShowCategoriesView(false);
-    // Aquí puedes agregar cualquier otro setShow... que tengas para asegurarte de que solo la vista principal quede activa
+  };
+
+  const handleProductClick = (producto) => {
+    setSelectedProduct(producto);
+    // Oculta otras vistas si es necesario
+    setShowCart(false);
+    setShowHistory(false);
+    setShowAddProduct(false);
+    setShowAddCategory(false);
+    setShowAddProvider(false);
+    setShowEditProducts(false);
+    setShowEditCategories(false);
+    setShowEditProviders(false);
+    setShowProvidersView(false);
+    setShowCategoriesView(false);
   };
 
   const showToast = (mensaje) => {
@@ -280,45 +297,59 @@ function App() {
           ))}
         </div>
       )}
-      {!showCart && !showHistory && !showAddProduct && !showAddCategory && !showAddProvider && !showEditProducts && !showEditCategories && !showEditProviders && !showProvidersView && !showCategoriesView && (
-        <>
-          {isAdmin && (
-            <div style={{ display: 'flex', justifyContent: 'flex-end', gap: '1rem', margin: '2rem 2rem 1.5rem 0' }}>
-              <button
-                style={{
-                  background: '#FFD600',
-                  color: '#222',
-                  border: 'none',
-                  borderRadius: 6,
-                  padding: '0.7rem 1.5rem',
-                  fontWeight: 'bold',
-                  cursor: 'pointer',
-                  fontSize: '1rem'
-                }}
-                onClick={() => setShowAddProduct(true)}
-              >
-                + Agregar producto
-              </button>
-              <button
-                style={{
-                  background: '#0071ce',
-                  color: '#fff',
-                  border: 'none',
-                  borderRadius: 6,
-                  padding: '0.7rem 1.5rem',
-                  fontWeight: 'bold',
-                  cursor: 'pointer',
-                  fontSize: '1rem'
-                }}
-                onClick={() => setShowEditProducts(true)}
-              >
-                Editar productos
-              </button>
-            </div>
-          )}
-          <SearchBar value={busqueda} onChange={setBusqueda} onSearch={handleSearch} />
-          <ProductList productos={productosFiltrados} onAddToCart={handleAddToCart} />
-        </>
+      {selectedProduct ? (
+        <ProductView
+          producto={selectedProduct}
+          productos={productos}
+          onAddToCart={handleAddToCart}
+          onSelectProduct={handleProductClick}
+          onBack={handleBackToHome} // Opcional, si quieres botón de regreso
+        />
+      ) : (
+        !showCart && !showHistory && !showAddProduct && !showAddCategory && !showAddProvider && !showEditProducts && !showEditCategories && !showEditProviders && !showProvidersView && !showCategoriesView && (
+          <>
+            {isAdmin && (
+              <div style={{ display: 'flex', justifyContent: 'flex-end', gap: '1rem', margin: '2rem 2rem 1.5rem 0' }}>
+                <button
+                  style={{
+                    background: '#FFD600',
+                    color: '#222',
+                    border: 'none',
+                    borderRadius: 6,
+                    padding: '0.7rem 1.5rem',
+                    fontWeight: 'bold',
+                    cursor: 'pointer',
+                    fontSize: '1rem'
+                  }}
+                  onClick={() => setShowAddProduct(true)}
+                >
+                  + Agregar producto
+                </button>
+                <button
+                  style={{
+                    background: '#0071ce',
+                    color: '#fff',
+                    border: 'none',
+                    borderRadius: 6,
+                    padding: '0.7rem 1.5rem',
+                    fontWeight: 'bold',
+                    cursor: 'pointer',
+                    fontSize: '1rem'
+                  }}
+                  onClick={() => setShowEditProducts(true)}
+                >
+                  Editar productos
+                </button>
+              </div>
+            )}
+            <SearchBar value={busqueda} onChange={setBusqueda} onSearch={handleSearch} />
+            <ProductList
+              productos={productosFiltrados}
+              onAddToCart={handleAddToCart}
+              onProductClick={handleProductClick}
+            />
+          </>
+        )
       )}
     </div>
   );
