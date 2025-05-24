@@ -16,7 +16,7 @@ function SearchBar({ value, onChange, onSearch }) {
     >
       <input
         type="text"
-        placeholder="Buscar productos..."
+        placeholder="Buscar ..."
         value={value}
         onChange={e => onChange(e.target.value)}
         style={{
