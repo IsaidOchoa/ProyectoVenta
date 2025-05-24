@@ -1,9 +1,9 @@
 import React, { useEffect, useState } from 'react';
+import AddProduct from './AddProduct';
 
 function EditProducts({ onBack }) {
   const [productos, setProductos] = useState([]);
-  const [editId, setEditId] = useState(null);
-  const [form, setForm] = useState({ nombre: '', descripcion: '', precio: '', stock: '' });
+  const [editProduct, setEditProduct] = useState(null);
   const [mensaje, setMensaje] = useState('');
 
   useEffect(() => {
@@ -12,88 +12,110 @@ function EditProducts({ onBack }) {
       .then(data => setProductos(data));
   }, []);
 
-  const startEdit = (producto) => {
-    setEditId(producto.id);
-    setForm({
-      nombre: producto.nombre,
-      descripcion: producto.descripcion,
-      precio: producto.precio,
-      stock: producto.stock
-    });
-    setMensaje('');
-  };
+  // Función para actualizar producto
+  const handleEditSubmit = async (form, setMensaje, setForm) => {
+    const token = localStorage.getItem('token');
+    const data = new FormData();
 
-  const handleChange = e => {
-    const { name, value } = e.target;
-    setForm(f => ({ ...f, [name]: value }));
-  };
+    // Renombra los campos para que coincidan con el backend
+    data.append('nombre', form.nombre);
+    data.append('descripcion', form.descripcion);
+    data.append('precio', form.precio);
+    data.append('stock', form.stock);
+    data.append('categoria_id', form.categoria); // <-- cambia a categoria_id
+    data.append('proveedor_id', form.proveedor); // <-- cambia a proveedor_id
+    if (form.imagen) {
+      data.append('imagen', form.imagen);
+    }
 
-  const handleSave = async () => {
-    const res = await fetch(`http://localhost/ProyectoVenta/public/api/productos/editar/${editId}`, {
-      method: 'PUT',
-      headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify(form)
+    for (let pair of data.entries()) {
+      console.log(pair[0]+ ': ' + pair[1]);
+    }
+
+    const res = await fetch(`http://localhost/ProyectoVenta/public/api/productos/Modificar/${editProduct.id}`, {
+      method: 'POST', // <--- CAMBIA A POST
+      headers: {
+        'Authorization': `Bearer ${token}`
+      },
+      body: data
     });
     const result = await res.json();
-    setMensaje(result.success ? 'Producto actualizado' : (result.message || 'Error al actualizar'));
+    setMensaje(result.success ? 'Producto actualizado correctamente' : (result.message || 'Error al actualizar producto'));
     if (result.success) {
-      setProductos(productos.map(p => p.id === editId ? { ...p, ...form } : p));
-      setEditId(null);
+      setProductos(productos.map(p => p.id === editProduct.id ? { ...p, ...form } : p));
+      setEditProduct(null);
     }
   };
 
   return (
-    <div style={{ maxWidth: 900, margin: '2rem auto', background: '#fff', borderRadius: 10, boxShadow: '0 2px 8px rgba(0,0,0,0.08)', padding: '2rem' }}>
+    <div style={{ maxWidth: 1200, margin: '2rem auto', background: '#fff', borderRadius: 10, boxShadow: '0 2px 8px rgba(0,0,0,0.08)', padding: '2rem' }}>
       <button onClick={onBack} style={{ background: 'none', border: 'none', cursor: 'pointer', marginBottom: 16, fontSize: 18 }}>&larr; Volver</button>
       <h2>Editar productos</h2>
-      {mensaje && <div style={{ marginBottom: 16, color: mensaje.includes('actualizado') ? 'green' : 'red' }}>{mensaje}</div>}
-      <table style={{ width: '100%', borderCollapse: 'collapse' }}>
-        <thead>
-          <tr style={{ background: '#f4f4f4' }}>
-            <th>Nombre</th>
-            <th>Descripción</th>
-            <th>Precio</th>
-            <th>Stock</th>
-            <th>Acción</th>
-          </tr>
-        </thead>
-        <tbody>
-          {productos.map(producto => (
-            <tr key={producto.id}>
-              <td>
-                {editId === producto.id ? (
-                  <input name="nombre" value={form.nombre} onChange={handleChange} />
-                ) : producto.nombre}
-              </td>
-              <td>
-                {editId === producto.id ? (
-                  <input name="descripcion" value={form.descripcion} onChange={handleChange} />
-                ) : producto.descripcion}
-              </td>
-              <td>
-                {editId === producto.id ? (
-                  <input name="precio" type="number" value={form.precio} onChange={handleChange} />
-                ) : producto.precio}
-              </td>
-              <td>
-                {editId === producto.id ? (
-                  <input name="stock" type="number" value={form.stock} onChange={handleChange} />
-                ) : producto.stock}
-              </td>
-              <td>
-                {editId === producto.id ? (
-                  <>
-                    <button onClick={handleSave} style={{ marginRight: 8, background: '#FFD600', border: 'none', borderRadius: 4, padding: '0.3rem 0.8rem', cursor: 'pointer' }}>Guardar</button>
-                    <button onClick={() => setEditId(null)} style={{ background: '#eee', border: 'none', borderRadius: 4, padding: '0.3rem 0.8rem', cursor: 'pointer' }}>Cancelar</button>
-                  </>
-                ) : (
-                  <button onClick={() => startEdit(producto)} style={{ background: '#0071ce', color: '#fff', border: 'none', borderRadius: 4, padding: '0.3rem 0.8rem', cursor: 'pointer' }}>Editar</button>
-                )}
-              </td>
+      {mensaje && <div style={{ marginBottom: 16, color: mensaje.includes('correctamente') ? 'green' : 'red' }}>{mensaje}</div>}
+      {editProduct && (
+        <AddProduct
+          initialData={{
+            ...editProduct,
+            categoria: editProduct.categoria_id,
+            proveedor: editProduct.proveedor_id
+          }}
+          editMode={true}
+          onSubmit={handleEditSubmit}
+          onCancel={() => setEditProduct(null)}
+        />
+      )}
+      <div style={{ overflowX: 'auto' }}>
+        <table style={{ minWidth: 1400, borderCollapse: 'collapse' }}>
+          <thead>
+            <tr style={{ background: '#f4f4f4' }}>
+              <th style={{ padding: '12px 16px', minWidth: 180 }}>Nombre</th>
+              <th style={{ padding: '12px 16px', minWidth: 260 }}>Descripción</th>
+              <th style={{ padding: '12px 16px', minWidth: 100, textAlign: 'center' }}>Precio</th>
+              <th style={{ padding: '12px 16px', minWidth: 100, textAlign: 'center' }}>Stock</th>
+              <th style={{ padding: '12px 16px', minWidth: 140, textAlign: 'center' }}>Categoría</th>
+              <th style={{ padding: '12px 16px', minWidth: 180, textAlign: 'center' }}>Proveedor</th>
+              <th style={{ padding: '12px 16px', minWidth: 160 }}>Acción</th>
             </tr>
-          ))}
-        </tbody>
-      </table>
+          </thead>
+          <tbody>
+            {productos.map(producto => (
+              <tr key={producto.id}>
+                <td style={{ padding: '10px 16px', minWidth: 180 }} title={producto.nombre}>
+                  {producto.nombre.length > 30
+                    ? producto.nombre.slice(0, 30) + '...'
+                    : producto.nombre}
+                </td>
+                <td style={{ padding: '10px 16px', minWidth: 260 }} title={producto.descripcion}>
+                  {producto.descripcion.length > 40
+                    ? producto.descripcion.slice(0, 40) + '...'
+                    : producto.descripcion}
+                </td>
+                <td style={{ padding: '10px 16px', minWidth: 100, textAlign: 'center' }}>{producto.precio}</td>
+                <td style={{ padding: '10px 16px', minWidth: 100, textAlign: 'center' }}>{producto.stock}</td>
+                <td style={{ padding: '10px 16px', minWidth: 140, textAlign: 'center' }}>{producto.categoria_nombre}</td>
+                <td style={{ padding: '10px 16px', minWidth: 180, textAlign: 'center' }} title={producto.proveedor_nombre}>
+                  {producto.proveedor_nombre && producto.proveedor_nombre.length > 30
+                    ? producto.proveedor_nombre.slice(0, 30) + '...'
+                    : producto.proveedor_nombre}
+                </td>
+                <td style={{ padding: '10px 16px', minWidth: 160, display: 'flex', gap: 8 }}>
+                  <button
+                    onClick={() => setEditProduct(producto)}
+                    style={{ background: '#0071ce', color: '#fff', border: 'none', borderRadius: 4, padding: '0.3rem 0.8rem', cursor: 'pointer' }}
+                  >
+                    Editar
+                  </button>
+                  <button
+                    style={{ background: '#ff9800', color: '#fff', border: 'none', borderRadius: 4, padding: '0.3rem 0.8rem', cursor: 'pointer' }}
+                  >
+                    Desactivar
+                  </button>
+                </td>
+              </tr>
+            ))}
+          </tbody>
+        </table>
+      </div>
     </div>
   );
 }

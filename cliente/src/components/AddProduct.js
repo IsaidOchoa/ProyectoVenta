@@ -1,6 +1,6 @@
 import React, { useState, useEffect } from 'react';
 
-function AddProduct({ onBack }) {
+function AddProduct({ onBack, initialData = {}, onSubmit, editMode = false, onCancel }) {
   const [form, setForm] = useState({
     nombre: '',
     descripcion: '',
@@ -13,6 +13,14 @@ function AddProduct({ onBack }) {
   const [mensaje, setMensaje] = useState('');
   const [categorias, setCategorias] = useState([]);
   const [proveedores, setProveedores] = useState([]);
+
+  useEffect(() => {
+    setForm(f => ({
+      ...f,
+      ...initialData,
+      imagen: null // No cargues la imagen existente, solo nueva si se selecciona
+    }));
+  }, [initialData]);
 
   useEffect(() => {
     fetch('http://localhost/ProyectoVenta/public/api/categorias')
@@ -49,29 +57,19 @@ function AddProduct({ onBack }) {
       setMensaje('Todos los campos son obligatorios');
       return;
     }
-    if (!form.imagen) {
+    if (!editMode && !form.imagen) {
       setMensaje('Debes seleccionar una imagen .jpg');
       return;
     }
-    const data = new FormData();
-    Object.entries(form).forEach(([k, v]) => data.append(k, v));
-    const token = localStorage.getItem('token');
-    const res = await fetch('http://localhost/ProyectoVenta/public/api/productos/Crear', {
-      method: 'POST',
-      headers: {
-        'Authorization': `Bearer ${token}`
-      },
-      body: data
-    });
-    const result = await res.json();
-    setMensaje(result.success ? 'Producto agregado correctamente' : (result.message || 'Error al agregar producto'));
-    if (result.success) setForm({ nombre: '', descripcion: '', precio: '', stock: '', imagen: null, categoria: '', proveedor: '' });
+    if (onSubmit) {
+      onSubmit(form, setMensaje, setForm);
+    }
   };
 
   return (
     <div style={{ maxWidth: 500, margin: '2rem auto', background: '#fff', borderRadius: 10, boxShadow: '0 2px 8px rgba(0,0,0,0.08)', padding: '2rem' }}>
-      <button onClick={onBack} style={{ background: 'none', border: 'none', cursor: 'pointer', marginBottom: 16, fontSize: 18 }}>&larr; Volver</button>
-      <h2>Agregar producto</h2>
+      <button onClick={onBack || onCancel} style={{ background: 'none', border: 'none', cursor: 'pointer', marginBottom: 16, fontSize: 18 }}>&larr; Volver</button>
+      <h2>{editMode ? 'Editar producto' : 'Agregar producto'}</h2>
       <form onSubmit={handleSubmit} style={{ display: 'flex', flexDirection: 'column', gap: 16 }}>
         <input name="nombre" placeholder="Nombre" value={form.nombre} onChange={handleChange} style={inputStyle} />
         <textarea name="descripcion" placeholder="Descripción" value={form.descripcion} onChange={handleChange} style={inputStyle} />
@@ -84,6 +82,11 @@ function AddProduct({ onBack }) {
           onChange={handleChange}
           style={inputStyle}
         />
+        {editMode && initialData.imagen && !form.imagen && (
+          <div style={{ fontSize: 14, color: '#555', marginTop: 4 }}>
+            Imagen actual: <span style={{ fontStyle: 'italic' }}>{initialData.imagen}</span>
+          </div>
+        )}
         <select
           name="categoria"
           value={form.categoria}
@@ -108,7 +111,8 @@ function AddProduct({ onBack }) {
         </select>
         <button type="submit" style={{
           background: '#FFD600', color: '#222', border: 'none', borderRadius: 6, padding: '0.8rem', fontWeight: 'bold', cursor: 'pointer'
-        }}>Agregar</button>
+        }}>{editMode ? 'Guardar cambios' : 'Agregar'}</button>
+        {editMode && <button type="button" onClick={onCancel}>Cancelar</button>}
       </form>
       {mensaje && (
         <div style={{

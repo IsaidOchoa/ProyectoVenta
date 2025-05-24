@@ -61,13 +61,22 @@ class ProductoService {
         return $stmt->execute([$nombre, $descripcion, $precio, $stock, $categoria_id, $proveedor_id, $rutaImagen]);
     }
 
-    public static function actualizarProducto($db,$id, $nombre, $descripcion, $precio, $stock, $categoria_id, $proveedor_id) {
-        
-        $query = "UPDATE productos 
-                  SET nombre = ?, descripcion = ?, precio = ?, stock = ?, categoria_id = ?, proveedor_id = ? 
-                  WHERE id = ?";
+    public static function actualizarProducto($db, $id, $nombre, $descripcion, $precio, $stock, $categoria_id, $proveedor_id, $nombreImagen = null) {
+        if ($nombreImagen) {
+            // Si hay nueva imagen, actualiza también la columna imagen
+            $query = "UPDATE productos 
+                      SET nombre = ?, descripcion = ?, precio = ?, stock = ?, categoria_id = ?, proveedor_id = ?, imagen = ?
+                      WHERE id = ?";
+            $params = [$nombre, $descripcion, $precio, $stock, $categoria_id, $proveedor_id, $nombreImagen, $id];
+        } else {
+            // Si no hay nueva imagen, no la actualices
+            $query = "UPDATE productos 
+                      SET nombre = ?, descripcion = ?, precio = ?, stock = ?, categoria_id = ?, proveedor_id = ?
+                      WHERE id = ?";
+            $params = [$nombre, $descripcion, $precio, $stock, $categoria_id, $proveedor_id, $id];
+        }
         $stmt = $db->prepare($query);
-        return $stmt->execute([$nombre, $descripcion, $precio, $stock, $categoria_id, $proveedor_id, $id]);
+        return $stmt->execute($params);
     }
 
     public static function eliminarProducto($db,$id) {
