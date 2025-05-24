@@ -12,6 +12,7 @@ import EditCategories from './components/EditCategories';
 import EditProviders from './components/EditProviders';
 import ProvidersView from './components/ProvidersView';
 import CategoriesView from './components/CategoriesView';
+import Toast from './components/Toast';
 import './App.css';
 
 function App() {
@@ -31,6 +32,7 @@ function App() {
   const [showEditProviders, setShowEditProviders] = useState(false);
   const [showProvidersView, setShowProvidersView] = useState(false);
   const [showCategoriesView, setShowCategoriesView] = useState(false);
+  const [toasts, setToasts] = useState([]);
 
   useEffect(() => {
     fetch('http://localhost/ProyectoVenta/public/api/productos')
@@ -84,7 +86,6 @@ function App() {
     setCart(prev => {
       const found = prev.find(item => item.id === producto.id);
       if (found) {
-        // Limita al stock disponible
         if (found.cantidad < producto.stock) {
           return prev.map(item =>
             item.id === producto.id ? { ...item, cantidad: item.cantidad + 1 } : item
@@ -101,6 +102,7 @@ function App() {
         return prev;
       }
     });
+    showToast('¡Producto agregado al carrito!');
   };
 
   const handleRemoveFromCart = (producto) => {
@@ -113,6 +115,10 @@ function App() {
         item.id === producto.id ? { ...item, cantidad: item.cantidad - 1 } : item
       );
     });
+  };
+
+  const handleDeleteFromCart = (producto) => {
+    setCart(prev => prev.filter(item => item.id !== producto.id));
   };
 
   const handleSearch = () => {
@@ -139,8 +145,16 @@ function App() {
   const handleBackToShop = () => setShowCart(false);
 
   const handleHistoryClick = () => {
-    // Aquí puedes hacer fetch al backend para traer el historial real
     setShowHistory(true);
+    setShowCart(false);
+    setShowAddProduct(false);
+    setShowAddCategory(false);
+    setShowAddProvider(false);
+    setShowEditProducts(false);
+    setShowEditCategories(false);
+    setShowEditProviders(false);
+    setShowProvidersView(false);
+    setShowCategoriesView(false);
   };
 
   const handleLogout = () => {
@@ -186,6 +200,8 @@ function App() {
   };
 
   const handleBackToHome = () => {
+    setShowHistory(false);
+    setShowCart(false);
     setShowAddProduct(false);
     setShowAddCategory(false);
     setShowAddProvider(false);
@@ -194,13 +210,21 @@ function App() {
     setShowEditProviders(false);
     setShowProvidersView(false);
     setShowCategoriesView(false);
-    setShowCart(false);
-    setShowHistory(false);
+    // Aquí puedes agregar cualquier otro setShow... que tengas para asegurarte de que solo la vista principal quede activa
+  };
+
+  const showToast = (mensaje) => {
+    const id = Date.now() + Math.random();
+    setToasts(prev => [...prev, { id, mensaje, visible: true }]);
+    setTimeout(() => {
+      setToasts(prev => prev.filter(t => t.id !== id));
+    }, 3000);
   };
 
   return (
     <div>
       <NavBar
+        cartCount={cart.reduce((sum, item) => sum + item.cantidad, 0)}
         onCartClick={handleCartClick}
         onHistoryClick={handleHistoryClick}
         onLogout={handleLogout}
@@ -235,9 +259,26 @@ function App() {
           cart={cart}
           onAdd={handleAddToCart}
           onRemove={handleRemoveFromCart}
+          onDelete={handleDeleteFromCart}
           onPay={handlePay}
           onBack={handleBackToHome}
         />
+      )}
+      {!showCart && (
+        <div style={{
+          position: 'fixed',
+          bottom: 30,
+          right: 30,
+          display: 'flex',
+          flexDirection: 'column',
+          alignItems: 'flex-end',
+          gap: 10,
+          zIndex: 9999
+        }}>
+          {toasts.map(toast => (
+            <Toast key={toast.id} mensaje={toast.mensaje} visible={toast.visible} />
+          ))}
+        </div>
       )}
       {!showCart && !showHistory && !showAddProduct && !showAddCategory && !showAddProvider && !showEditProducts && !showEditCategories && !showEditProviders && !showProvidersView && !showCategoriesView && (
         <>

@@ -1,7 +1,7 @@
 import React from 'react';
-import { FaArrowLeft } from 'react-icons/fa';
+import { FaArrowLeft, FaTrash } from 'react-icons/fa';
 
-function CartView({ cart, onAdd, onRemove, onPay, onBack }) {
+function CartView({ cart, onAdd, onRemove, onPay, onBack, onDelete }) {
   const total = cart.reduce((sum, item) => sum + item.precio * item.cantidad, 0);
 
   return (
@@ -44,7 +44,7 @@ function CartView({ cart, onAdd, onRemove, onPay, onBack }) {
               padding: '1rem 1.5rem'
             }}>
               <img
-                src={`http://localhost/ProyectoVenta/public/${item.imagen}`}
+                src={`http://localhost/ProyectoVenta/public/uploads/${item.imagen}`}
                 alt={item.nombre}
                 style={{ width: 80, height: 80, objectFit: 'contain', marginRight: 24, borderRadius: 8, background: '#fff' }}
               />
@@ -64,13 +64,71 @@ function CartView({ cart, onAdd, onRemove, onPay, onBack }) {
                 <div style={{ fontWeight: 'bold', fontSize: '1.1rem', marginBottom: 8 }}>
                   Total: ${(item.precio * item.cantidad).toFixed(2)}
                 </div>
-                <div>
+                <div style={{
+                  display: 'flex',
+                  alignItems: 'center', // Alinea verticalmente
+                  gap: 8
+                }}>
+                  <button
+                    onClick={() => {
+                      if (window.confirm('¿Eliminar este producto del carrito?')) {
+                        onDelete(item);
+                      }
+                    }}
+                    style={{
+                      width: 36,
+                      height: 36,
+                      fontSize: 18,
+                      marginRight: 8,
+                      borderRadius: 4,
+                      border: '1px solid #e53935',
+                      background: '#fff',
+                      color: '#e53935',
+                      display: 'inline-flex',
+                      alignItems: 'center',
+                      justifyContent: 'center',
+                      cursor: 'pointer'
+                    }}
+                    title="Eliminar producto"
+                  >
+                    <FaTrash />
+                  </button>
                   <button onClick={() => onRemove(item)} style={{
-                    width: 32, height: 32, fontSize: 18, marginRight: 8, borderRadius: 4, border: '1px solid #ccc'
+                    width: 36,
+                    height: 36,
+                    fontSize: 18,
+                    marginRight: 8,
+                    borderRadius: 4,
+                    border: '1px solid #ccc',
+                    background: '#fff',
+                    color: '#222',
+                    display: 'inline-flex',
+                    alignItems: 'center',
+                    justifyContent: 'center',
+                    cursor: 'pointer'
                   }}>-</button>
-                  <span style={{ margin: '0 10px', fontWeight: 'bold' }}>{item.cantidad}</span>
+                  <span style={{
+                    margin: '0 10px',
+                    fontWeight: 'bold',
+                    minWidth: 24,
+                    textAlign: 'center',
+                    height: 36,
+                    lineHeight: '36px',
+                    fontSize: 18,
+                    display: 'inline-block'
+                  }}>{item.cantidad}</span>
                   <button onClick={() => onAdd(item)} style={{
-                    width: 32, height: 32, fontSize: 18, borderRadius: 4, border: '1px solid #ccc'
+                    width: 36,
+                    height: 36,
+                    fontSize: 18,
+                    borderRadius: 4,
+                    border: '1px solid #ccc',
+                    background: '#fff',
+                    color: '#222',
+                    display: 'inline-flex',
+                    alignItems: 'center',
+                    justifyContent: 'center',
+                    cursor: 'pointer'
                   }}>+</button>
                 </div>
               </div>
