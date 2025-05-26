@@ -174,10 +174,6 @@ html, body {
     overflow-x: auto;
 }
 
-.search-bar {
-    /* Estilos específicos para la barra de búsqueda, si los hay */
-}
-
 .search-bar-bg {
     width: 100vw;
     left: 0;

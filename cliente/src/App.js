@@ -14,6 +14,7 @@ import ProvidersView from './components/ProvidersView';
 import CategoriesView from './components/CategoriesView';
 import Toast from './components/Toast';
 import ProductView from './components/ProductView';
+import Login from './components/Login';
 import './App.css';
 
 function App() {
@@ -35,6 +36,7 @@ function App() {
   const [showCategoriesView, setShowCategoriesView] = useState(false);
   const [toasts, setToasts] = useState([]);
   const [selectedProduct, setSelectedProduct] = useState(null);
+  const [usuario, setUsuario] = useState(null);
 
   useEffect(() => {
     fetch('http://localhost/ProyectoVenta/public/api/productos')
@@ -244,6 +246,20 @@ function App() {
   const productosVisibles = isAdmin
     ? productos // Admin ve todos
     : productos.filter(p => p.estado === 1); // Cliente solo ve activos
+
+  if (!usuario) {
+    return (
+      <Login
+        onLogin={(credenciales) => {
+          // Aquí luego pondrás la lógica real
+          setUsuario({ correo: credenciales.correo });
+        }}
+        onShowRegister={() => {
+          alert('Aquí irá el registro');
+        }}
+      />
+    );
+  }
 
   return (
     <div>
