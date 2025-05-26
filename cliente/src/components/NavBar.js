@@ -1,8 +1,26 @@
-import React, { useState } from 'react';
+import React, { useState, useRef, useEffect } from 'react';
 import { FaShoppingCart, FaBars } from 'react-icons/fa';
 
-function NavBar({ onCartClick, onShowProviders, onShowCategories, onHistoryClick, onLogout, cartCount }) {
+function NavBar({ onCartClick, onShowProviders, onShowCategories, onHistoryClick, onLogout, cartCount, onShowUsers }) {
   const [menuOpen, setMenuOpen] = useState(false);
+  const menuRef = useRef(null);
+
+  // Cerrar menú al hacer clic fuera
+  useEffect(() => {
+    function handleClickOutside(event) {
+      if (menuRef.current && !menuRef.current.contains(event.target)) {
+        setMenuOpen(false);
+      }
+    }
+    if (menuOpen) {
+      document.addEventListener('mousedown', handleClickOutside);
+    } else {
+      document.removeEventListener('mousedown', handleClickOutside);
+    }
+    return () => {
+      document.removeEventListener('mousedown', handleClickOutside);
+    };
+  }, [menuOpen]);
 
   return (
     <nav className="navbar">
@@ -40,17 +58,25 @@ function NavBar({ onCartClick, onShowProviders, onShowCategories, onHistoryClick
               <FaBars size={32} />
             </button>
             {menuOpen && (
-              <div style={{
-                position: 'absolute',
-                right: 0,
-                top: '2.5rem',
-                background: '#fff',
-                border: '1px solid #ccc',
-                borderRadius: 6,
-                boxShadow: '0 2px 8px rgba(0,0,0,0.08)',
-                zIndex: 10,
-                minWidth: 220
-              }}>
+              <div
+                ref={menuRef}
+                style={{
+                  position: 'absolute',
+                  right: 0,
+                  top: '2.5rem',
+                  background: '#fff',
+                  border: '1px solid #ccc',
+                  borderRadius: 6,
+                  boxShadow: '0 2px 8px rgba(0,0,0,0.08)',
+                  zIndex: 10,
+                  minWidth: 220
+                }}>
+                <div
+                  style={{ padding: '0.9rem 1.5rem', cursor: 'pointer', borderBottom: '1px solid #eee', color: '#222', background: '#fff' }}
+                  onClick={() => { setMenuOpen(false); onShowUsers && onShowUsers(); }}
+                >
+                  Usuarios
+                </div>
                 <div
                   style={{ padding: '0.9rem 1.5rem', cursor: 'pointer', borderBottom: '1px solid #eee', color: '#222', background: '#fff' }}
                   onClick={() => { setMenuOpen(false); onShowProviders(); }}

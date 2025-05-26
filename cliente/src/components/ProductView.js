@@ -10,12 +10,15 @@ function ProductView({ producto, productos, onAddToCart, onSelectProduct, onBack
     .slice(0, 2);
 
   return (
-    <div style={{
-      display: 'flex',
-      flexDirection: 'column',
-      padding: '2rem',
-      minHeight: '70vh'
-    }}>
+    <div
+      className="product-view-container"
+      style={{
+        display: 'flex',
+        flexDirection: 'column',
+        padding: '2rem',
+        minHeight: '70vh'
+      }}
+    >
       {/* Fila superior: Botón volver */}
       <div style={{
         width: '100%',
@@ -42,12 +45,16 @@ function ProductView({ producto, productos, onAddToCart, onSelectProduct, onBack
         </button>
       </div>
       {/* Contenido principal */}
-      <div style={{
-        display: 'flex',
-        gap: '2rem',
-        width: '100%',
-        alignItems: 'flex-start'
-      }}>
+      <div
+        className="product-view-content"
+        style={{
+          display: 'flex',
+          gap: '2rem',
+          width: '100%',
+          alignItems: 'flex-start',
+          flexWrap: 'wrap'
+        }}
+      >
         {/* Columna izquierda: imagen */}
         <div style={{
           flex: 1,

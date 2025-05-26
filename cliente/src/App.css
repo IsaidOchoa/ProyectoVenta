@@ -44,17 +44,28 @@ body {
     background: #f4f4f4;
 }
 
+html, body {
+  overflow-x: clip; /* Mejor que hidden para evitar bugs de scroll en sticky */
+  width: 100vw;
+  max-width: 100vw;
+}
+
 /* Navbar */
 .navbar {
     background: #3a6ea5; /* azul más claro */
     color: #fff;
     padding: 1.2rem 1rem; /* más alto */
+    position: sticky;   /* <-- Esto la deja fija al hacer scroll */
+    top: 0;
+    width: 100%;
+    z-index: 100;
 }
 
 .navbar-content {
     display: flex;
     align-items: center;
     justify-content: space-between;
+    padding-right: 2.5rem; /* Agrega este padding para separar los íconos */
 }
 
 .navbar-logo img {
@@ -136,10 +147,131 @@ body {
     padding: 2rem;
 }
 
+/* Barra de búsqueda y botones de acción */
+.search-actions-container {
+    width: 100vw;
+    left: 0;
+    box-sizing: border-box;
+    background: #f8f8f8;
+    padding: 0.5rem 0 0.3rem 0; /* Menos padding para hacerla más delgada */
+    display: flex;
+    flex-direction: column;
+    gap: 0.5rem;
+    position: sticky;
+    top: 72px;
+    z-index: 99;
+    margin: 0; /* Asegura que no sobresalga */
+    overflow-x: clip; /* Evita que sobresalga contenido */
+}
+
+.search-bar,
+.action-buttons {
+    width: 100vw;         /* O 100vw si quieres aún más a la derecha */
+    max-width: 1200px;   /* Ajusta este valor si quieres más espacio */
+    margin: 0 auto;
+    display: flex;
+    align-items: center;
+    overflow-x: auto;
+}
+
+.search-bar {
+    /* Estilos específicos para la barra de búsqueda, si los hay */
+}
+
+.search-bar-bg {
+    width: 100vw;
+    left: 0;
+    background: #fff;
+    margin: 0;
+    padding: 0;
+    box-sizing: border-box;
+    display: flex;
+    justify-content: center;
+    overflow-x: clip;
+}
+
+/* Botones de acción debajo y a la derecha */
+.action-buttons {
+    display: flex;
+    justify-content: flex-end; /* <-- Cambia 'center' por 'flex-end' */
+    align-items: center;
+    width: 95vw;
+    max-width: 1100px;
+    margin: 0 auto;
+    overflow-x: auto;
+}
+
+.action-buttons .btn {
+    font-weight: bold;
+    border: none;
+    border-radius: 6px;
+    padding: 0.7rem 1.4rem;
+    font-size: 1rem;
+    cursor: pointer;
+    transition: background 0.2s;
+    margin-left: 1rem;
+}
+
+.action-buttons .btn-add {
+    background: #ffd600;
+    color: #222;
+}
+
+.action-buttons .btn-edit {
+    background: #0071ce;
+    color: #fff;
+}
+
+
 /* Responsivo */
 @media (max-width: 600px) {
     .products-container {
         padding: 1rem;
         gap: 1rem;
     }
+}
+
+/* Responsivo */
+@media (max-width: 800px) {
+    .search-actions-container {
+        flex-direction: column;
+        align-items: stretch;
+        gap: 0.7rem;
+        padding: 1rem 1rem 0.5rem 1rem;
+    }
+    .action-buttons {
+        justify-content: flex-end;
+    }
+}
+
+/* Responsivo para la vista de producto */
+.product-view-content {
+  display: flex;
+  gap: 2rem;
+  width: 100%;
+  align-items: flex-start;
+  flex-wrap: wrap;
+}
+
+@media (max-width: 900px) {
+  .product-view-content {
+    flex-direction: column;
+    align-items: center;
+    gap: 1.5rem;
+  }
+  .product-view-content > div {
+    max-width: 100% !important;
+    min-width: 0 !important;
+    margin-left: 0 !important;
+    margin-right: 0 !important;
+  }
+}
+
+@media (max-width: 600px) {
+  .product-view-container {
+    padding: 0.5rem !important;
+  }
+  .product-view-content {
+    gap: 1rem;
+  }
 }

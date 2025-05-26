@@ -148,6 +148,26 @@ class ProductosController {
             echo json_encode(["message" => "Error al eliminar producto"]);
         }
     }
+
+    public static function desactivar($id) {
+        $db = (new Database())->getConnection();
+        $resultado = ProductoService::desactivarProducto($db, $id);
+        if ($resultado) {
+            echo json_encode(['success' => true, 'message' => 'Producto desactivado']);
+        } else {
+            echo json_encode(['success' => false, 'message' => 'No se pudo desactivar el producto']);
+        }
+    }
+
+    public static function activar($id) {
+        $db = (new Database())->getConnection();
+        $resultado = ProductoService::activarProducto($db, $id);
+        if ($resultado) {
+            echo json_encode(['success' => true, 'message' => 'Producto activado']);
+        } else {
+            echo json_encode(['success' => false, 'message' => 'No se pudo activar el producto']);
+        }
+    }
 }
         
 ?>

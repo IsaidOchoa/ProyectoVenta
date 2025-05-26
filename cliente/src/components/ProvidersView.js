@@ -113,7 +113,7 @@ function ProvidersView({ onBack }) {
       <SearchBar
         value={busqueda}
         onChange={setBusqueda}
-        onSearch={() => {}} // Puedes dejarlo vacío si el filtro es en tiempo real
+        onSearch={() => {}}
       />
       {/* Formulario tipo tarjeta */}
       <form onSubmit={handleAdd} style={{

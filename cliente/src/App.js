@@ -238,6 +238,13 @@ function App() {
     }, 3000);
   };
 
+  // Simulación de admin
+  const esAdmin = true; // Cambia a false para simular cliente
+
+  const productosVisibles = isAdmin
+    ? productos // Admin ve todos
+    : productos.filter(p => p.estado === 1); // Cliente solo ve activos
+
   return (
     <div>
       <NavBar
@@ -303,51 +310,36 @@ function App() {
           productos={productos}
           onAddToCart={handleAddToCart}
           onSelectProduct={handleProductClick}
-          onBack={handleBackToHome} // Opcional, si quieres botón de regreso
+          onBack={handleBackToHome}
         />
       ) : (
         !showCart && !showHistory && !showAddProduct && !showAddCategory && !showAddProvider && !showEditProducts && !showEditCategories && !showEditProviders && !showProvidersView && !showCategoriesView && (
           <>
-            {isAdmin && (
-              <div style={{ display: 'flex', justifyContent: 'flex-end', gap: '1rem', margin: '2rem 2rem 1.5rem 0' }}>
-                <button
-                  style={{
-                    background: '#FFD600',
-                    color: '#222',
-                    border: 'none',
-                    borderRadius: 6,
-                    padding: '0.7rem 1.5rem',
-                    fontWeight: 'bold',
-                    cursor: 'pointer',
-                    fontSize: '1rem'
-                  }}
-                  onClick={() => setShowAddProduct(true)}
-                >
-                  + Agregar producto
-                </button>
-                <button
-                  style={{
-                    background: '#0071ce',
-                    color: '#fff',
-                    border: 'none',
-                    borderRadius: 6,
-                    padding: '0.7rem 1.5rem',
-                    fontWeight: 'bold',
-                    cursor: 'pointer',
-                    fontSize: '1rem'
-                  }}
-                  onClick={() => setShowEditProducts(true)}
-                >
-                  Editar productos
-                </button>
-              </div>
-            )}
-            <SearchBar value={busqueda} onChange={setBusqueda} onSearch={handleSearch} />
-            <ProductList
-              productos={productosFiltrados}
-              onAddToCart={handleAddToCart}
-              onProductClick={handleProductClick}
-            />
+            <div className="search-actions-container">
+              <SearchBar
+                value={busqueda}
+                onChange={setBusqueda}
+                onSearch={handleSearch}
+                sticky
+              />
+              {isAdmin && (
+                <div className="action-buttons">
+                  <button className="btn btn-add" onClick={() => setShowAddProduct(true)}>
+                    + Agregar producto
+                  </button>
+                  <button className="btn btn-edit" onClick={() => setShowEditProducts(true)}>
+                    Editar productos
+                  </button>
+                </div>
+              )}
+            </div>
+            <div style={{ display: 'flex', flexWrap: 'wrap', gap: '1rem', justifyContent: 'center' }}>
+              <ProductList
+                productos={productosFiltrados.length > 0 || busqueda ? productosFiltrados : productosVisibles}
+                onAddToCart={handleAddToCart}
+                onProductClick={handleProductClick}
+              />
+            </div>
           </>
         )
       )}

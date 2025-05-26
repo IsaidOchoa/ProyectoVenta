@@ -24,15 +24,15 @@ class ProductoService {
         }
     }
 
-    public static function obtenerTodos($db) {
+    public static function obtenerTodos($db) { //para administrador
         try {
             $query = "SELECT p.id, p.nombre, p.descripcion, p.precio, p.stock, 
-                             p.imagen,  -- <--- agrega esto
-                             c.nombre_categoria AS categoria_nombre, 
-                             pr.nombre AS proveedor_nombre
-                      FROM productos p
-                      JOIN categorias c ON p.categoria_id = c.id
-                      JOIN proveedores pr ON p.proveedor_id = pr.id";
+                         p.imagen, p.estado,  -- <--- agrega esto
+                         c.nombre_categoria AS categoria_nombre, 
+                         pr.nombre AS proveedor_nombre
+                  FROM productos p
+                  JOIN categorias c ON p.categoria_id = c.id
+                  JOIN proveedores pr ON p.proveedor_id = pr.id";
             $stmt = $db->prepare($query);
             $stmt->execute();
             return $stmt->fetchAll(PDO::FETCH_ASSOC);
@@ -104,6 +104,44 @@ class ProductoService {
             return $stmt->fetchAll(PDO::FETCH_ASSOC);
         } catch (Exception $e) {
             throw new Exception("Error al obtener los proveedores: " . $e->getMessage());
+        }
+    }
+
+    public static function obtenerActivos($db) { //para cliente
+        try {
+            $query = "SELECT p.id, p.nombre, p.descripcion, p.precio, p.stock, 
+                         p.imagen, p.estado,
+                         c.nombre_categoria AS categoria_nombre, 
+                         pr.nombre AS proveedor_nombre
+                  FROM productos p
+                  JOIN categorias c ON p.categoria_id = c.id
+                  JOIN proveedores pr ON p.proveedor_id = pr.id
+                  WHERE p.estado = 1";
+            $stmt = $db->prepare($query);
+            $stmt->execute();
+            return $stmt->fetchAll(PDO::FETCH_ASSOC);
+        } catch (Exception $e) {
+            throw new Exception("Error al obtener los productos activos: " . $e->getMessage());
+        }
+    }
+
+    public static function desactivarProducto($db, $id) {
+        try {
+            $query = "UPDATE productos SET estado = 0 WHERE id = ?";
+            $stmt = $db->prepare($query);
+            return $stmt->execute([$id]);
+        } catch (Exception $e) {
+            throw new Exception("Error al desactivar el producto con ID $id: " . $e->getMessage());
+        }
+    }
+
+    public static function activarProducto($db, $id) {
+        try {
+            $query = "UPDATE productos SET estado = 1 WHERE id = ?";
+            $stmt = $db->prepare($query);
+            return $stmt->execute([$id]);
+        } catch (Exception $e) {
+            throw new Exception("Error al activar el producto con ID $id: " . $e->getMessage());
         }
     }
 }
