@@ -1,7 +1,7 @@
 import React, { useState, useRef, useEffect } from 'react';
 import { FaShoppingCart, FaBars } from 'react-icons/fa';
 
-function NavBar({ onCartClick, onShowProviders, onShowCategories, onHistoryClick, onLogout, cartCount, onShowUsers }) {
+function NavBar({ onCartClick, onShowProviders, onShowCategories, onHistoryClick, onLogout, cartCount, onShowUsers, usuario }) {
   const [menuOpen, setMenuOpen] = useState(false);
   const menuRef = useRef(null);
 
@@ -25,8 +25,13 @@ function NavBar({ onCartClick, onShowProviders, onShowCategories, onHistoryClick
   return (
     <nav className="navbar">
       <div className="navbar-content">
-        <div className="navbar-logo">
-          <span style={{ fontWeight: 'bold', fontSize: '1.2rem' }}>Walmart</span>
+        <div className="navbar-logo" style={{ display: 'flex', alignItems: 'center', gap: '1.2rem' }}>
+          <span style={{ fontWeight: 'bold', fontSize: '1.2rem', color: '#fff' }}>Walmart</span>
+          {usuario && usuario.nombre && usuario.apellido && (
+            <span style={{ fontSize: '1rem', color: '#fff', fontWeight: 500 }}>
+              Bienvenido {usuario.nombre} {usuario.apellido}
+            </span>
+          )}
         </div>
         <div className="navbar-actions" style={{ display: 'flex', alignItems: 'center', gap: '1.2rem' }}>
           <button className="btn" onClick={onCartClick} style={{ fontSize: 28, position: 'relative' }}>

@@ -15,6 +15,7 @@ import CategoriesView from './components/CategoriesView';
 import Toast from './components/Toast';
 import ProductView from './components/ProductView';
 import Login from './components/Login';
+import RegisterView from './components/RegisterView'; // <-- Importa tu vista de registro
 import './App.css';
 
 function App() {
@@ -37,6 +38,24 @@ function App() {
   const [toasts, setToasts] = useState([]);
   const [selectedProduct, setSelectedProduct] = useState(null);
   const [usuario, setUsuario] = useState(null);
+  const [showRegister, setShowRegister] = useState(false); // <-- Nuevo estado
+
+  // Al cargar la app, intenta recuperar el usuario de localStorage
+  useEffect(() => {
+    const usuarioGuardado = localStorage.getItem('usuario');
+    if (usuarioGuardado) {
+      setUsuario(JSON.parse(usuarioGuardado));
+    }
+  }, []);
+
+  // Cuando el usuario cambie, guárdalo en localStorage
+  useEffect(() => {
+    if (usuario) {
+      localStorage.setItem('usuario', JSON.stringify(usuario));
+    } else {
+      localStorage.removeItem('usuario');
+    }
+  }, [usuario]);
 
   useEffect(() => {
     fetch('http://localhost/ProyectoVenta/public/api/productos')
@@ -162,8 +181,8 @@ function App() {
   };
 
   const handleLogout = () => {
-    // Lógica de logout
-    alert('Cerrar sesión');
+    setUsuario(null); // Esto regresa al login
+    setShowRegister(false);
   };
 
   const handlePay = async () => {
@@ -247,16 +266,26 @@ function App() {
     ? productos // Admin ve todos
     : productos.filter(p => p.estado === 1); // Cliente solo ve activos
 
+  // Cambia la lógica de renderizado para login/registro:
   if (!usuario) {
+    if (showRegister) {
+      return (
+        <RegisterView
+          onShowLogin={() => setShowRegister(false)}
+        />
+      );
+    }
     return (
       <Login
         onLogin={(credenciales) => {
           // Aquí luego pondrás la lógica real
-          setUsuario({ correo: credenciales.correo });
+          setUsuario({
+            correo: credenciales.correo,
+            nombre: credenciales.nombre,
+            apellido: credenciales.apellido
+          });
         }}
-        onShowRegister={() => {
-          alert('Aquí irá el registro');
-        }}
+        onShowRegister={() => setShowRegister(true)}
       />
     );
   }
@@ -284,6 +313,7 @@ function App() {
           setShowHistory(false);
         }}
         isAdmin={isAdmin}
+        usuario={usuario} // <-- Pasa el usuario al NavBar
       />
       {showAddProduct && <AddProduct onBack={handleBackToHome} />}
       {showAddCategory && <AddCategory onBack={handleBackToHome} />}

@@ -49,8 +49,35 @@ class UsuarioService {
         }
     }
 
-    public static function autenticarUsuario($db, $email, $password) {
-        // Lógica futura para autenticar usuario
+    public static function autenticarUsuario($db, $correo, $contrasena) {
+        // Validar campos requeridos
+        if (empty($correo) || empty($contrasena)) {
+            return ['success' => false, 'message' => 'Correo y contraseña son obligatorios'];
+        }
+
+        // Buscar usuario por correo
+        $stmt = $db->prepare("SELECT * FROM usuarios WHERE correo = ?");
+        $stmt->execute([$correo]);
+        $usuario = $stmt->fetch(PDO::FETCH_ASSOC);
+
+        if (!$usuario) {
+            return ['success' => false, 'message' => 'Usuario o contraseña incorrectos'];
+        }
+
+        // Verificar si el usuario está activo
+        if (isset($usuario['estado_usuario']) && $usuario['estado_usuario'] != 1) {
+            return ['success' => false, 'message' => 'Usuario NO disponible'];
+        }
+
+        // Verificar contraseña
+        if (!password_verify($contrasena, $usuario['contrasena'])) {
+            return ['success' => false, 'message' => 'Usuario o contraseña incorrectos'];
+        }
+
+        // No devolver la contraseña
+        unset($usuario['contrasena']);
+
+        return ['success' => true, 'usuario' => $usuario];
     }
 }
 ?>
