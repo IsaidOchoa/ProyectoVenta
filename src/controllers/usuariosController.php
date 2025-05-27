@@ -1,37 +1,71 @@
 <?php
+header("Access-Control-Allow-Origin: *");
+header("Access-Control-Allow-Headers: Authorization, Content-Type");
+header("Access-Control-Allow-Methods: GET, POST, PUT, DELETE, OPTIONS");
+header('Content-Type: application/json');
+if ($_SERVER['REQUEST_METHOD'] === 'OPTIONS') {
+    http_response_code(200);
+    exit;
+}
+
 require_once __DIR__ . '/../services/UsuarioService.php';
 require_once __DIR__ . '/../config/db.php';
 
 class UsuariosController {
     public static function register() {
-        header('Content-Type: application/json');
+        file_put_contents(__DIR__ . '/debug_registro.log', "INICIO register\n", FILE_APPEND);
 
         // Obtener datos del body (JSON)
         $input = json_decode(file_get_contents('php://input'), true);
+        file_put_contents(__DIR__ . '/debug_registro.log', "INPUT: " . print_r($input, true), FILE_APPEND);
 
         // Validar que se recibieron datos
         if (!$input) {
+            file_put_contents(__DIR__ . '/debug_registro.log', "NO INPUT\n", FILE_APPEND);
             http_response_code(400);
-            echo json_encode(['success' => false, 'message' => 'Datos inválidos']);
-            return;
+            $json = json_encode(['success' => false, 'message' => 'Datos inválidos']);
+            file_put_contents(__DIR__ . '/debug_registro.log', "JSON ERROR: " . $json . "\n", FILE_APPEND);
+            echo $json;
+            exit;
         }
 
         // Conexión a la base de datos
-        $db = getDB();
+        $db = (new Database())->getConnection();
+        file_put_contents(__DIR__ . '/debug_registro.log', "DB OK\n", FILE_APPEND);
 
         // Crear usuario
         $resultado = UsuarioService::crearUsuario($db, $input);
+        file_put_contents(__DIR__ . '/debug_registro.log', "RESULTADO: " . print_r($resultado, true), FILE_APPEND);
 
-        if ($resultado['success']) {
-            http_response_code(201);
-            echo json_encode([
-                "success" => true,
-                "message" => "Usuario registrado correctamente"
-            ]);
-            exit;
+        if ($resultado && isset($resultado['success'])) {
+            if ($resultado['success']) {
+                http_response_code(201);
+                $json = json_encode([
+                    "success" => true,
+                    "message" => "Usuario registrado correctamente"
+                ]);
+                file_put_contents(__DIR__ . '/debug_registro.log', "JSON OK: " . $json . "\n", FILE_APPEND);
+                echo $json;
+                exit;
+            } else {
+                http_response_code(400);
+                $json = json_encode([
+                    "success" => false,
+                    "message" => $resultado['message'] ?? 'Error al registrar usuario'
+                ]);
+                file_put_contents(__DIR__ . '/debug_registro.log', "JSON FAIL: " . $json . "\n", FILE_APPEND);
+                echo $json;
+                exit;
+            }
         } else {
-            http_response_code(400);
-            echo json_encode(['success' => false, 'message' => $resultado['message']]);
+            http_response_code(500);
+            $json = json_encode([
+                "success" => false,
+                "message" => "Error interno en el registro"
+            ]);
+            file_put_contents(__DIR__ . '/debug_registro.log', "JSON INTERNAL: " . $json . "\n", FILE_APPEND);
+            echo $json;
+            exit;
         }
     }
 
@@ -49,10 +83,10 @@ class UsuariosController {
         }
 
         // Conexión a la base de datos
-        $db = getDB();
+        $db = (new Database())->getConnection();
 
         // Autenticar usuario
-        $resultado = UsuarioService::autenticarUsuario($db, $input['correo'], $input['contrasena']);
+        $resultado = UsuarioService::login($db, $input['correo'], $input['contrasena']);
 
         if ($resultado['success']) {
             // Generar token JWT
@@ -71,6 +105,14 @@ class UsuariosController {
             http_response_code(401);
             echo json_encode($resultado);
         }
+    }
+
+    public static function getAll() {
+        $db = (new Database())->getConnection();
+        $stmt = $db->query("SELECT id, nombre, correo, rol FROM usuarios");
+        $usuarios = $stmt->fetchAll(PDO::FETCH_ASSOC);
+        echo json_encode($usuarios);
+        exit;
     }
 }
 ?>

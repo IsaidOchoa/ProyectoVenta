@@ -31,7 +31,18 @@ const Register = ({ onShowLogin }) => {
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify(form)
       });
-      const data = await res.json();
+      const text = await res.text();
+      console.log('Respuesta cruda:', text);
+
+      let data = {};
+      try {
+        data = JSON.parse(text);
+      } catch (e) {
+        setMensaje('Error inesperado en el servidor');
+        console.error('Error al parsear JSON:', e);
+        return;
+      }
+
       if (data.success) {
         setMensaje('¡Registro exitoso! Ahora puedes iniciar sesión.');
       } else {
@@ -39,6 +50,7 @@ const Register = ({ onShowLogin }) => {
       }
     } catch (err) {
       setMensaje('Error de conexión');
+      console.error(err);
     }
   };
 

@@ -44,7 +44,7 @@ function UsersView({ onBack }) {
             <tr key={user.id}>
               <td style={{ textAlign: 'center', padding: 8 }}>{user.id}</td>
               <td style={{ textAlign: 'center', padding: 8 }}>{user.nombre}</td>
-              <td style={{ textAlign: 'center', padding: 8 }}>{user.email}</td>
+              <td style={{ textAlign: 'center', padding: 8 }}>{user.correo}</td>
               <td style={{ textAlign: 'center', padding: 8 }}>{user.rol || '-'}</td>
             </tr>
           ))}

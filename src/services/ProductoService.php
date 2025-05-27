@@ -13,7 +13,6 @@ if ($_SERVER['REQUEST_METHOD'] === 'OPTIONS') {
 
 class ProductoService {
     public static function actualizarStock($db, $id, $cantidad) {
-        
     
         try {
             $query = "UPDATE productos SET stock = stock + ? WHERE id = ?";

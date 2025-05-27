@@ -1,4 +1,16 @@
 <?php
+require_once __DIR__ . '/../config/db.php';
+
+header("Access-Control-Allow-Origin: *");
+header("Access-Control-Allow-Headers: Authorization, Content-Type");
+header("Access-Control-Allow-Methods: GET, POST, PUT, DELETE, OPTIONS");
+header('Content-Type: application/json');
+
+if ($_SERVER['REQUEST_METHOD'] === 'OPTIONS') {
+    http_response_code(200);
+    exit;
+}
+
 class UsuarioService {
     public static function crearUsuario($db, $datos) {
         // Validar campos requeridos
@@ -8,20 +20,16 @@ class UsuarioService {
                 return ['success' => false, 'message' => "Falta el campo: $campo"];
             }
         }
-
         // Verificar si el correo ya existe
         $stmt = $db->prepare("SELECT id FROM usuarios WHERE correo = ?");
         $stmt->execute([$datos['correo']]);
         if ($stmt->fetch()) {
             return ['success' => false, 'message' => 'El correo ya está registrado'];
         }
-
         // Generar ID único (puedes usar UUID o similar)
         $id = uniqid('usr_', true);
-
         // Encriptar contraseña
         $hash = password_hash($datos['contrasena'], PASSWORD_DEFAULT);
-
         // Insertar usuario
         $sql = "INSERT INTO usuarios 
             (id, nombre, apellido, correo, telefono, contrasena, pais, estado_direccion, ciudad, calle, colonia, codigo_postal, numero_domicilio, rol, estado_usuario, fecha_registro)
@@ -45,11 +53,11 @@ class UsuarioService {
         if ($db->prepare($sql)->execute($params)) {
             return ['success' => true, 'message' => 'Usuario creado correctamente'];
         } else {
-            return ['success' => false, 'message' => 'Error al crear usuario'];
+            return ['success' => false, 'message' => 'Error al registrar usuario'];
         }
     }
 
-    public static function autenticarUsuario($db, $correo, $contrasena) {
+    public static function login($db, $correo, $contrasena) {
         // Validar campos requeridos
         if (empty($correo) || empty($contrasena)) {
             return ['success' => false, 'message' => 'Correo y contraseña son obligatorios'];

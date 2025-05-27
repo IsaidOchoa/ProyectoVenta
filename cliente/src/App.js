@@ -310,13 +310,24 @@ function App() {
     }
     return (
       <Login
-        onLogin={(credenciales) => {
-          // Aquí luego pondrás la lógica real
-          setUsuario({
-            correo: credenciales.correo,
-            nombre: credenciales.nombre,
-            apellido: credenciales.apellido
-          });
+        onLogin={async ({ correo, contrasena }) => {
+          try {
+            const response = await fetch('http://localhost/ProyectoVenta/public/api/usuarios/login', {
+              method: 'POST',
+              headers: { 'Content-Type': 'application/json' },
+              body: JSON.stringify({ correo, contrasena })
+            });
+            const data = await response.json();
+            if (data.success) {
+              setUsuario(data.usuario);
+              localStorage.setItem('usuario', JSON.stringify(data.usuario));
+              localStorage.setItem('token', data.token);
+            } else {
+              alert(data.message || 'Credenciales incorrectas');
+            }
+          } catch (error) {
+            alert('Error al conectar con el servidor');
+          }
         }}
         onShowRegister={() => setShowRegister(true)}
       />
