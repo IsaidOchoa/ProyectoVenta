@@ -16,6 +16,7 @@ import Toast from './components/Toast';
 import ProductView from './components/ProductView';
 import Login from './components/Login';
 import RegisterView from './components/RegisterView'; // <-- Importa tu vista de registro
+import UsersView from './components/UsersView';
 import './App.css';
 
 function App() {
@@ -39,6 +40,7 @@ function App() {
   const [selectedProduct, setSelectedProduct] = useState(null);
   const [usuario, setUsuario] = useState(null);
   const [showRegister, setShowRegister] = useState(false); // <-- Nuevo estado
+  const [showUsersView, setShowUsersView] = useState(false);
 
   // Al cargar la app, intenta recuperar el usuario de localStorage
   useEffect(() => {
@@ -178,6 +180,7 @@ function App() {
     setShowEditProviders(false);
     setShowProvidersView(false);
     setShowCategoriesView(false);
+    setShowUsersView(false); // <-- Agrega esta línea
   };
 
   const handleLogout = () => {
@@ -219,7 +222,36 @@ function App() {
     setShowEditProducts(false);
     setShowEditCategories(false);
     setShowEditProviders(false);
-    // ...oculta cualquier otra vista
+    setShowUsersView(false); // <-- Agrega esto aquí
+  };
+
+  const handleShowCategories = () => {
+    setShowCategoriesView(true);
+    setShowProvidersView(false);
+    setShowCart(false);
+    setShowHistory(false);
+    setShowAddProduct(false);
+    setShowAddCategory(false);
+    setShowAddProvider(false);
+    setShowEditProducts(false);
+    setShowEditCategories(false);
+    setShowEditProviders(false);
+    setShowUsersView(false); // <-- Agrega esto aquí
+  };
+
+  const handleShowUsers = () => {
+    setShowUsersView(true);
+    setShowProvidersView(false);
+    setShowCategoriesView(false);
+    setShowCart(false);
+    setShowHistory(false);
+    setShowAddProduct(false);
+    setShowAddCategory(false);
+    setShowAddProvider(false);
+    setShowEditProducts(false);
+    setShowEditCategories(false);
+    setShowEditProviders(false);
+    setSelectedProduct(null);
   };
 
   const handleBackToHome = () => {
@@ -234,6 +266,7 @@ function App() {
     setShowEditProviders(false);
     setShowProvidersView(false);
     setShowCategoriesView(false);
+    setShowUsersView(false); // <-- Agrega esta línea
   };
 
   const handleProductClick = (producto) => {
@@ -300,94 +333,91 @@ function App() {
         onAddProduct={() => { setShowAddProduct(true); setShowAddCategory(false); setShowAddProvider(false); setShowCart(false); setShowHistory(false); }}
         onAddCategory={() => { setShowAddCategory(true); setShowAddProduct(false); setShowAddProvider(false); setShowCart(false); setShowHistory(false); }}
         onAddProvider={() => { setShowAddProvider(true); setShowAddProduct(false); setShowAddCategory(false); setShowCart(false); setShowHistory(false); }}
-        onShowProviders={() => {
-          setShowProvidersView(true);
-          setShowCategoriesView(false);
-          setShowCart(false);
-          setShowHistory(false);
-        }}
-        onShowCategories={() => {
-          setShowCategoriesView(true);
-          setShowProvidersView(false);
-          setShowCart(false);
-          setShowHistory(false);
-        }}
+        onShowProviders={handleShowProviders} // <-- Usa la función centralizada
+        onShowCategories={handleShowCategories} // <-- Usa la función centralizada
+        onShowUsers={handleShowUsers} // <-- Ya está bien
         isAdmin={isAdmin}
-        usuario={usuario} // <-- Pasa el usuario al NavBar
+        usuario={usuario}
       />
-      {showAddProduct && <AddProduct onBack={handleBackToHome} />}
-      {showAddCategory && <AddCategory onBack={handleBackToHome} />}
-      {showAddProvider && <AddProvider onBack={handleBackToHome} />}
-      {showEditProducts && <EditProducts onBack={handleBackToHome} />}
-      {showEditCategories && <EditCategories onBack={handleBackToHome} />}
-      {showEditProviders && <EditProviders onBack={handleBackToHome} />}
-      {showProvidersView && <ProvidersView onBack={handleBackToHome} />}
-      {showCategoriesView && <CategoriesView onBack={handleBackToHome} />}
-      {showHistory && <PurchaseHistory historial={historial} onBack={handleBackToHome} />}
-      {showCart && (
-        <CartView
-          cart={cart}
-          onAdd={handleAddToCart}
-          onRemove={handleRemoveFromCart}
-          onDelete={handleDeleteFromCart}
-          onPay={handlePay}
-          onBack={handleBackToHome}
-        />
-      )}
-      {!showCart && (
-        <div style={{
-          position: 'fixed',
-          bottom: 30,
-          right: 30,
-          display: 'flex',
-          flexDirection: 'column',
-          alignItems: 'flex-end',
-          gap: 10,
-          zIndex: 9999
-        }}>
-          {toasts.map(toast => (
-            <Toast key={toast.id} mensaje={toast.mensaje} visible={toast.visible} />
-          ))}
-        </div>
-      )}
-      {selectedProduct ? (
-        <ProductView
-          producto={selectedProduct}
-          productos={productos}
-          onAddToCart={handleAddToCart}
-          onSelectProduct={handleProductClick}
-          onBack={handleBackToHome}
-        />
+      {showUsersView ? (
+        <UsersView onBack={handleBackToHome} />
       ) : (
-        !showCart && !showHistory && !showAddProduct && !showAddCategory && !showAddProvider && !showEditProducts && !showEditCategories && !showEditProviders && !showProvidersView && !showCategoriesView && (
-          <>
-            <div className="search-actions-container">
-              <SearchBar
-                value={busqueda}
-                onChange={setBusqueda}
-                onSearch={handleSearch}
-                sticky
-              />
-              {isAdmin && (
-                <div className="action-buttons">
-                  <button className="btn btn-add" onClick={() => setShowAddProduct(true)}>
-                    + Agregar producto
-                  </button>
-                  <button className="btn btn-edit" onClick={() => setShowEditProducts(true)}>
-                    Editar productos
-                  </button>
+        <>
+          {showAddProduct && <AddProduct onBack={handleBackToHome} />}
+          {showAddCategory && <AddCategory onBack={handleBackToHome} />}
+          {showAddProvider && <AddProvider onBack={handleBackToHome} />}
+          {showEditProducts && <EditProducts onBack={handleBackToHome} />}
+          {showEditCategories && <EditCategories onBack={handleBackToHome} />}
+          {showEditProviders && <EditProviders onBack={handleBackToHome} />}
+          {showProvidersView && <ProvidersView onBack={handleBackToHome} />}
+          {showCategoriesView && <CategoriesView onBack={handleBackToHome} />}
+          {showHistory && <PurchaseHistory historial={historial} onBack={handleBackToHome} />}
+          {showCart && (
+            <CartView
+              cart={cart}
+              onAdd={handleAddToCart}
+              onRemove={handleRemoveFromCart}
+              onDelete={handleDeleteFromCart}
+              onPay={handlePay}
+              onBack={handleBackToHome}
+            />
+          )}
+          {!showCart && (
+            <div style={{
+              position: 'fixed',
+              bottom: 30,
+              right: 30,
+              display: 'flex',
+              flexDirection: 'column',
+              alignItems: 'flex-end',
+              gap: 10,
+              zIndex: 9999
+            }}>
+              {toasts.map(toast => (
+                <Toast key={toast.id} mensaje={toast.mensaje} visible={toast.visible} />
+              ))}
+            </div>
+          )}
+          {selectedProduct ? (
+            <ProductView
+              producto={selectedProduct}
+              productos={productos}
+              onAddToCart={handleAddToCart}
+              onSelectProduct={handleProductClick}
+              onBack={handleBackToHome}
+            />
+          ) : (
+            !showCart && !showHistory && !showAddProduct && !showAddCategory && !showAddProvider && !showEditProducts && !showEditCategories && !showEditProviders && !showProvidersView && !showCategoriesView && (
+              <>
+                <div className="search-actions-container">
+                  <SearchBar
+                    value={busqueda}
+                    onChange={setBusqueda}
+                    onSearch={handleSearch}
+                    sticky
+                  />
+                  {isAdmin && (
+                    <div className="action-buttons">
+                      <button className="btn btn-add" onClick={() => setShowAddProduct(true)}>
+                        + Agregar producto
+                      </button>
+                      <button className="btn btn-edit" onClick={() => setShowEditProducts(true)}>
+                        Editar productos
+                      </button>
+                    </div>
+                  )}
                 </div>
-              )}
-            </div>
-            <div style={{ display: 'flex', flexWrap: 'wrap', gap: '1rem', justifyContent: 'center' }}>
-              <ProductList
-                productos={productosFiltrados.length > 0 || busqueda ? productosFiltrados : productosVisibles}
-                onAddToCart={handleAddToCart}
-                onProductClick={handleProductClick}
-              />
-            </div>
-          </>
-        )
+                <div style={{ display: 'flex', flexWrap: 'wrap', gap: '1rem', justifyContent: 'center' }}>
+                  <ProductList
+                    productos={productosFiltrados.length > 0 || busqueda ? productosFiltrados : productosVisibles}
+                    onAddToCart={handleAddToCart}
+                    onProductClick={handleProductClick}
+                  />
+                </div>
+              </>
+            )
+          )}
+        </>
       )}
     </div>
   );
