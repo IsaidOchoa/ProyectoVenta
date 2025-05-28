@@ -13,19 +13,25 @@ if ($_SERVER['REQUEST_METHOD'] === 'OPTIONS') {
 
 class UsuarioService {
     public static function crearUsuario($db, $datos) {
+        file_put_contents(__DIR__ . '/debug_registro.log', "INICIO crearUsuario: " . print_r($datos, true), FILE_APPEND);
+
         // Validar campos requeridos
         $requeridos = ['nombre', 'apellido', 'correo', 'telefono', 'contrasena', 'pais', 'estado_direccion', 'ciudad', 'calle', 'colonia', 'codigo_postal', 'numero_domicilio'];
         foreach ($requeridos as $campo) {
             if (empty($datos[$campo])) {
+                file_put_contents(__DIR__ . '/debug_registro.log', "FALTA CAMPO: $campo\n", FILE_APPEND);
                 return ['success' => false, 'message' => "Falta el campo: $campo"];
             }
         }
+
         // Verificar si el correo ya existe
         $stmt = $db->prepare("SELECT id FROM usuarios WHERE correo = ?");
         $stmt->execute([$datos['correo']]);
         if ($stmt->fetch()) {
+            file_put_contents(__DIR__ . '/debug_registro.log', "CORREO YA REGISTRADO\n", FILE_APPEND);
             return ['success' => false, 'message' => 'El correo ya está registrado'];
         }
+
         // Generar ID único (puedes usar UUID o similar)
         $id = uniqid('usr_', true);
         // Encriptar contraseña
@@ -50,7 +56,10 @@ class UsuarioService {
             $datos['numero_domicilio']
         ];
 
-        if ($db->prepare($sql)->execute($params)) {
+        $result = $db->prepare($sql)->execute($params);
+        file_put_contents(__DIR__ . '/debug_registro.log', "EJECUTA INSERT: " . ($result ? "OK" : "FALLÓ") . "\n", FILE_APPEND);
+
+        if ($result) {
             return ['success' => true, 'message' => 'Usuario creado correctamente'];
         } else {
             return ['success' => false, 'message' => 'Error al registrar usuario'];

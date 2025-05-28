@@ -15,11 +15,9 @@ class UsuariosController {
     public static function register() {
         file_put_contents(__DIR__ . '/debug_registro.log', "INICIO register\n", FILE_APPEND);
 
-        // Obtener datos del body (JSON)
         $input = json_decode(file_get_contents('php://input'), true);
-        file_put_contents(__DIR__ . '/debug_registro.log', "INPUT: " . print_r($input, true), FILE_APPEND);
+        file_put_contents(__DIR__ . '/debug_registro.log', "INPUT RECIBIDO: " . print_r($input, true), FILE_APPEND);
 
-        // Validar que se recibieron datos
         if (!$input) {
             file_put_contents(__DIR__ . '/debug_registro.log', "NO INPUT\n", FILE_APPEND);
             http_response_code(400);
@@ -29,13 +27,11 @@ class UsuariosController {
             exit;
         }
 
-        // Conexión a la base de datos
         $db = (new Database())->getConnection();
         file_put_contents(__DIR__ . '/debug_registro.log', "DB OK\n", FILE_APPEND);
 
-        // Crear usuario
         $resultado = UsuarioService::crearUsuario($db, $input);
-        file_put_contents(__DIR__ . '/debug_registro.log', "RESULTADO: " . print_r($resultado, true), FILE_APPEND);
+        file_put_contents(__DIR__ . '/debug_registro.log', "RESULTADO crearUsuario: " . print_r($resultado, true), FILE_APPEND);
 
         if ($resultado && isset($resultado['success'])) {
             if ($resultado['success']) {

@@ -25,8 +25,9 @@ const Register = ({ onShowLogin }) => {
   const handleSubmit = async e => {
     e.preventDefault();
     setMensaje('');
+    console.log('Datos enviados al backend:', form); // <-- Aquí
     try {
-      const res = await fetch('http://localhost/proyectoVenta/public/api/usuarios/registrar', {
+      const res = await fetch('http://localhost/ProyectoVenta/public/api/usuarios/registrar', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify(form)

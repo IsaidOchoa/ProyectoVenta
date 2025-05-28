@@ -23,10 +23,10 @@ if (!file_exists(__DIR__ . '/../src/routes/productosRoutes.php')) {
 }
 
 // Incluir archivo de rutas
-require_once __DIR__ . '/../src/routes/productosRoutes.php';
+require_once __DIR__ . '/../src/routes/usuariosRoutes.php';
 require_once __DIR__ . '/../src/routes/comprasRoutes.php';
 require_once __DIR__ . '/../src/routes/ProveedoresRoutes.php';
-require_once __DIR__ . '/../src/routes/usuariosRoutes.php';
+require_once __DIR__ . '/../src/routes/productosRoutes.php';
 require_once __DIR__ . '/../src/routes/CategoriasRoutes.php';
 
 require_once __DIR__ . '/../src/routes/tokenRoutes.php';
