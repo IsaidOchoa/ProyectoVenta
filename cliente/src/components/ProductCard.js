@@ -1,6 +1,6 @@
 import React from 'react';
 
-function ProductCard({ producto, onAddToCart, enCarrito, onProductClick }) {
+function ProductCard({ producto, onAddToCart, enCarrito, onProductClick, isAdmin }) {
   const isDesactivado = producto.estado === 0;
 
   return (
@@ -147,6 +147,27 @@ function ProductCard({ producto, onAddToCart, enCarrito, onProductClick }) {
           Agregar al carrito
         </button>
       </div>
+      {/* Mensaje adicional para administradores */}
+      {producto.estado !== 1 && isAdmin && (
+        <div
+          className="no-disponible"
+          style={{
+            position: 'absolute',
+            bottom: 10,
+            left: 10,
+            right: 10,
+            background: 'rgba(255,0,0,0.7)',
+            color: '#fff',
+            padding: '4px 8px',
+            borderRadius: 4,
+            textAlign: 'center',
+            fontWeight: 'bold',
+            fontSize: 14
+          }}
+        >
+          Producto no disponible
+        </div>
+      )}
     </div>
   );
 }

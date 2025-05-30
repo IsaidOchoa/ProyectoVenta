@@ -105,9 +105,28 @@ class UsuariosController {
 
     public static function getAll() {
         $db = (new Database())->getConnection();
-        $stmt = $db->query("SELECT id, nombre, correo, rol FROM usuarios");
+        $stmt = $db->query("SELECT id, nombre, correo, rol, fecha_registro FROM usuarios");
         $usuarios = $stmt->fetchAll(PDO::FETCH_ASSOC);
         echo json_encode($usuarios);
+        exit;
+    }
+
+    public static function toggleEstado($id) {
+        $input = json_decode(file_get_contents('php://input'), true);
+        if (!isset($input['estado_usuario'])) {
+            http_response_code(400);
+            echo json_encode(['success' => false, 'message' => 'Falta el campo estado_usuario']);
+            exit;
+        }
+        $db = (new Database())->getConnection();
+        $stmt = $db->prepare("UPDATE usuarios SET estado_usuario = ? WHERE id = ?");
+        $ok = $stmt->execute([$input['estado_usuario'], $id]);
+        if ($ok) {
+            echo json_encode(['success' => true, 'message' => 'Estado actualizado']);
+        } else {
+            http_response_code(500);
+            echo json_encode(['success' => false, 'message' => 'Error al actualizar estado']);
+        }
         exit;
     }
 }

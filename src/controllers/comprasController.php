@@ -55,16 +55,27 @@ public static function realizarCompra() {
             ProductoService::actualizarStock($db, $item['id'], -$item['cantidad']);
         }
 
+        // Limpiar el carrito del usuario después de la compra
+        $stmt = $db->prepare("DELETE FROM carrito WHERE usuario_id = ?");
+        $stmt->execute([$usuario_id]);
+
         $db->commit();
-        echo json_encode(["message" => "Compra realizada con éxito", "id_venta" => $id_venta]);
+        echo json_encode([
+            "success" => true,
+            "message" => "Compra realizada con éxito",
+            "id_venta" => $id_venta
+        ]);
+        exit;
     } catch (Exception $e) {
         $db->rollBack();
+        http_response_code(400);
         echo json_encode([
+            "success" => false,
             "error" => $e->getMessage(),
             "line" => $e->getLine(),
             "file" => $e->getFile()
         ]);
-        http_response_code(400);
+        exit;
     }
 }
     public static function obtenerProductos() {

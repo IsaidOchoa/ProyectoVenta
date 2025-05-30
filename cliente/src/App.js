@@ -15,7 +15,7 @@ import CategoriesView from './components/CategoriesView';
 import Toast from './components/Toast';
 import ProductView from './components/ProductView';
 import Login from './components/Login';
-import RegisterView from './components/RegisterView'; // <-- Importa tu vista de registro
+import RegisterView from './components/RegisterView';
 import UsersView from './components/UsersView';
 import './App.css';
 
@@ -26,8 +26,8 @@ function App() {
   const [cart, setCart] = useState([]);
   const [showCart, setShowCart] = useState(false);
   const [showHistory, setShowHistory] = useState(false);
-  const [historial, setHistorial] = useState([]); // Simulado, luego lo traes del backend
-  const [isAdmin, setIsAdmin] = useState(true); // Cambia a false para ocultar
+  const [historial, setHistorial] = useState([]);
+  const [isAdmin, setIsAdmin] = useState(false); // Inicialmente false
   const [showAddProduct, setShowAddProduct] = useState(false);
   const [showAddCategory, setShowAddCategory] = useState(false);
   const [showAddProvider, setShowAddProvider] = useState(false);
@@ -39,23 +39,26 @@ function App() {
   const [toasts, setToasts] = useState([]);
   const [selectedProduct, setSelectedProduct] = useState(null);
   const [usuario, setUsuario] = useState(null);
-  const [showRegister, setShowRegister] = useState(false); // <-- Nuevo estado
+  const [showRegister, setShowRegister] = useState(false);
   const [showUsersView, setShowUsersView] = useState(false);
 
-  // Al cargar la app, intenta recuperar el usuario de localStorage
+  // Recupera usuario y rol
   useEffect(() => {
     const usuarioGuardado = localStorage.getItem('usuario');
     if (usuarioGuardado) {
-      setUsuario(JSON.parse(usuarioGuardado));
+      const user = JSON.parse(usuarioGuardado);
+      setUsuario(user);
+      setIsAdmin(user.rol === 'admin');
     }
   }, []);
 
-  // Cuando el usuario cambie, guárdalo en localStorage
   useEffect(() => {
     if (usuario) {
       localStorage.setItem('usuario', JSON.stringify(usuario));
+      setIsAdmin(usuario.rol === 'admin');
     } else {
       localStorage.removeItem('usuario');
+      setIsAdmin(false);
     }
   }, [usuario]);
 
@@ -80,82 +83,125 @@ function App() {
 
   useEffect(() => {
     if (showHistory) {
-      // Simulación de historial de compras
       setHistorial([
-        {
-          id: 1,
-          nombre: 'Ticket 1',
-          total: 120.50,
-          fecha: '2024-06-01',
-          estado: 'en bodega'
-        },
-        {
-          id: 2,
-          nombre: 'Ticket 2',
-          total: 89.99,
-          fecha: '2024-06-10',
-          estado: 'en camino'
-        },
-        {
-          id: 3,
-          nombre: 'Ticket 3',
-          total: 45.00,
-          fecha: '2024-06-15',
-          estado: 'entregado'
-        }
+        { id: 1, nombre: 'Ticket 1', total: 120.50, fecha: '2024-06-01', estado: 'en bodega' },
+        { id: 2, nombre: 'Ticket 2', total: 89.99, fecha: '2024-06-10', estado: 'en camino' },
+        { id: 3, nombre: 'Ticket 3', total: 45.00, fecha: '2024-06-15', estado: 'entregado' }
       ]);
     }
   }, [showHistory]);
 
-  const handleAddToCart = (producto) => {
-    setCart(prev => {
-      const found = prev.find(item => item.id === producto.id);
-      if (found) {
-        if (found.cantidad < producto.stock) {
-          return prev.map(item =>
-            item.id === producto.id ? { ...item, cantidad: item.cantidad + 1 } : item
-          );
-        } else {
-          alert('No hay más stock disponible para este producto');
-          return prev;
-        }
-      }
-      if (producto.stock > 0) {
-        return [...prev, { ...producto, cantidad: 1 }];
+  // Al guardar:
+  useEffect(() => {
+    if (usuario) {
+      localStorage.setItem(`cart_${usuario.id}`, JSON.stringify(cart));
+    }
+  }, [cart, usuario]);
+
+  useEffect(() => {
+    if (usuario) {
+      const cartGuardado = localStorage.getItem(`cart_${usuario.id}`);
+      if (cartGuardado) {
+        setCart(JSON.parse(cartGuardado));
       } else {
-        alert('Producto sin stock');
-        return prev;
+        setCart([]);
       }
+    }
+    // Si no hay usuario, puedes limpiar el carrito si lo deseas:
+    // else {
+    //   setCart([]);
+    // }
+  }, [usuario]);
+
+  useEffect(() => {
+    if (usuario) {
+      fetch(`http://localhost/ProyectoVenta/public/api/carrito/${usuario.id}`)
+        .then(res => res.json())
+        .then(data => setCart(data.productos || []));
+    }
+  }, [usuario]);
+
+
+
+  const handleAddToCart = (producto) => {
+    // Siempre usa producto_id para comparar y guardar
+    const id = producto.producto_id || producto.id;
+    let nuevaCantidad = 1;
+    setCart(prev => {
+      const found = prev.find(item => item.producto_id === id);
+      if (found) {
+        nuevaCantidad = found.cantidad + 1;
+        return prev.map(item =>
+          item.producto_id === id
+            ? { ...item, cantidad: nuevaCantidad }
+            : item
+        );
+      }
+      // Siempre guarda producto_id
+      return [...prev, { ...producto, producto_id: id, cantidad: 1 }];
     });
-    showToast('¡Producto agregado al carrito!');
+
+    showToast('Producto agregado al carrito');
+
+    fetch(`http://localhost/ProyectoVenta/public/api/carrito/${usuario.id}`, {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ producto_id: id, cantidad: 1 })
+    });
   };
 
   const handleRemoveFromCart = (producto) => {
+    const id = producto.producto_id || producto.id;
     setCart(prev => {
-      const found = prev.find(item => item.id === producto.id);
-      if (found.cantidad <= 1) {
-        return prev.filter(item => item.id !== producto.id);
+      const found = prev.find(item => item.producto_id === id);
+      if (!found) return prev;
+      const nuevaCantidad = found.cantidad - 1;
+      if (nuevaCantidad <= 0) {
+        fetch(`http://localhost/ProyectoVenta/public/api/carrito/${usuario.id}/${id}`, {
+          method: 'DELETE'
+        });
+        showToast('Producto eliminado del carrito');
+        return prev.filter(item => item.producto_id !== id);
+      } else {
+        fetch(`http://localhost/ProyectoVenta/public/api/carrito/${usuario.id}`, {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ producto_id: id, cantidad: nuevaCantidad })
+        });
+        showToast('Cantidad actualizada en el carrito');
+        return prev.map(item =>
+          item.producto_id === id
+            ? { ...item, cantidad: nuevaCantidad }
+            : item
+        );
       }
-      return prev.map(item =>
-        item.id === producto.id ? { ...item, cantidad: item.cantidad - 1 } : item
-      );
     });
   };
 
   const handleDeleteFromCart = (producto) => {
-    setCart(prev => prev.filter(item => item.id !== producto.id));
+    const id = producto.producto_id || producto.id;
+    setCart(prev => prev.filter(item => item.producto_id !== id));
+    fetch(`http://localhost/ProyectoVenta/public/api/carrito/${usuario.id}/${id}`, {
+      method: 'DELETE'
+    });
+    showToast('Producto eliminado del carrito');
   };
 
   const handleSearch = () => {
-    const filtro = productos.filter(p =>
+    let filtro = productos.filter(p =>
       p.nombre.toLowerCase().includes(busqueda.toLowerCase()) ||
       p.descripcion.toLowerCase().includes(busqueda.toLowerCase())
     );
+    if (!isAdmin) {
+      filtro = filtro.filter(p => p.estado === 1);
+    }
     setProductosFiltrados(filtro);
   };
 
+  // Al mostrar el carrito, oculta la selección de productos
   const handleCartClick = () => {
     setShowCart(true);
+    setSelectedProduct(null); // Oculta la vista de producto individual
     setShowHistory(false);
     setShowAddProduct(false);
     setShowAddCategory(false);
@@ -180,26 +226,49 @@ function App() {
     setShowEditProviders(false);
     setShowProvidersView(false);
     setShowCategoriesView(false);
-    setShowUsersView(false); // <-- Agrega esta línea
+    setShowUsersView(false);
   };
 
   const handleLogout = () => {
-    setUsuario(null); // Esto regresa al login
+    setUsuario(null);
     setShowRegister(false);
   };
 
   const handlePay = async () => {
+    // El carrito ya está sincronizado con la BD, así que puedes usar el estado `cart`
+    const usuario = JSON.parse(localStorage.getItem('usuario'));
+    const body = {
+      productos: cart.map(item => ({
+        id: item.producto_id, // O item.id según tu estructura
+        cantidad: item.cantidad,
+        // Puedes agregar precio_unitario si lo necesitas
+      })),
+      usuario_id: usuario.id
+    };
+
     const response = await fetch('http://localhost/ProyectoVenta/public/api/compras/realizar', {
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify({ carrito: cart })
+      body: JSON.stringify(body)
     });
-    const data = await response.json();
+
+    const text = await response.text();
+    let data = {};
+    try {
+      data = JSON.parse(text);
+    } catch (e) {
+      alert('Error inesperado en el servidor');
+      return;
+    }
     if (data.success) {
-      alert('¡Compra realizada!');
+      alert(data.message);
       setCart([]);
+      // Vacía el carrito en la BD
+      await fetch(`http://localhost/ProyectoVenta/public/api/carrito/${usuario.id}`, {
+        method: 'DELETE'
+      });
       setShowCart(false);
-      // Recargar productos para actualizar stock en la vista principal
+      // Recarga productos
       fetch('http://localhost/ProyectoVenta/public/api/productos')
         .then(res => res.json())
         .then(data => {
@@ -207,7 +276,7 @@ function App() {
           setProductosFiltrados(data);
         });
     } else {
-      alert(data.message || 'Error al realizar la compra');
+      alert(data.error || 'Error al realizar la compra');
     }
   };
 
@@ -222,7 +291,7 @@ function App() {
     setShowEditProducts(false);
     setShowEditCategories(false);
     setShowEditProviders(false);
-    setShowUsersView(false); // <-- Agrega esto aquí
+    setShowUsersView(false);
   };
 
   const handleShowCategories = () => {
@@ -236,7 +305,7 @@ function App() {
     setShowEditProducts(false);
     setShowEditCategories(false);
     setShowEditProviders(false);
-    setShowUsersView(false); // <-- Agrega esto aquí
+    setShowUsersView(false);
   };
 
   const handleShowUsers = () => {
@@ -266,12 +335,11 @@ function App() {
     setShowEditProviders(false);
     setShowProvidersView(false);
     setShowCategoriesView(false);
-    setShowUsersView(false); // <-- Agrega esta línea
+    setShowUsersView(false);
   };
 
   const handleProductClick = (producto) => {
     setSelectedProduct(producto);
-    // Oculta otras vistas si es necesario
     setShowCart(false);
     setShowHistory(false);
     setShowAddProduct(false);
@@ -292,9 +360,7 @@ function App() {
     }, 3000);
   };
 
-  // Simulación de admin
-  const esAdmin = true; // Cambia a false para simular cliente
-
+  // Filtrado de productos según el rol
   const productosVisibles = isAdmin
     ? productos // Admin ve todos
     : productos.filter(p => p.estado === 1); // Cliente solo ve activos
@@ -322,6 +388,7 @@ function App() {
               setUsuario(data.usuario);
               localStorage.setItem('usuario', JSON.stringify(data.usuario));
               localStorage.setItem('token', data.token);
+              setIsAdmin(data.usuario.rol === 'admin');
             } else {
               alert(data.message || 'Credenciales incorrectas');
             }
@@ -344,9 +411,9 @@ function App() {
         onAddProduct={() => { setShowAddProduct(true); setShowAddCategory(false); setShowAddProvider(false); setShowCart(false); setShowHistory(false); }}
         onAddCategory={() => { setShowAddCategory(true); setShowAddProduct(false); setShowAddProvider(false); setShowCart(false); setShowHistory(false); }}
         onAddProvider={() => { setShowAddProvider(true); setShowAddProduct(false); setShowAddCategory(false); setShowCart(false); setShowHistory(false); }}
-        onShowProviders={handleShowProviders} // <-- Usa la función centralizada
-        onShowCategories={handleShowCategories} // <-- Usa la función centralizada
-        onShowUsers={handleShowUsers} // <-- Ya está bien
+        onShowProviders={handleShowProviders}
+        onShowCategories={handleShowCategories}
+        onShowUsers={handleShowUsers}
         isAdmin={isAdmin}
         usuario={usuario}
       />
@@ -354,14 +421,14 @@ function App() {
         <UsersView onBack={handleBackToHome} />
       ) : (
         <>
-          {showAddProduct && <AddProduct onBack={handleBackToHome} />}
-          {showAddCategory && <AddCategory onBack={handleBackToHome} />}
-          {showAddProvider && <AddProvider onBack={handleBackToHome} />}
-          {showEditProducts && <EditProducts onBack={handleBackToHome} />}
-          {showEditCategories && <EditCategories onBack={handleBackToHome} />}
-          {showEditProviders && <EditProviders onBack={handleBackToHome} />}
-          {showProvidersView && <ProvidersView onBack={handleBackToHome} />}
-          {showCategoriesView && <CategoriesView onBack={handleBackToHome} />}
+          {showAddProduct && isAdmin && <AddProduct onBack={handleBackToHome} />}
+          {showAddCategory && isAdmin && <AddCategory onBack={handleBackToHome} />}
+          {showAddProvider && isAdmin && <AddProvider onBack={handleBackToHome} />}
+          {showEditProducts && isAdmin && <EditProducts onBack={handleBackToHome} />}
+          {showEditCategories && isAdmin && <EditCategories onBack={handleBackToHome} />}
+          {showEditProviders && isAdmin && <EditProviders onBack={handleBackToHome} />}
+          {showProvidersView && isAdmin && <ProvidersView onBack={handleBackToHome} />}
+          {showCategoriesView && isAdmin && <CategoriesView onBack={handleBackToHome} />}
           {showHistory && <PurchaseHistory historial={historial} onBack={handleBackToHome} />}
           {showCart && (
             <CartView

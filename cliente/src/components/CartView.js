@@ -5,13 +5,7 @@ function CartView({ cart, onAdd, onRemove, onPay, onBack, onDelete }) {
   const total = cart.reduce((sum, item) => sum + item.precio * item.cantidad, 0);
 
   return (
-    <div style={{
-      display: 'flex',
-      gap: '2rem',
-      padding: '2rem',
-      alignItems: 'flex-start',
-      minHeight: '80vh'
-    }}>
+    <div className="cart-view-container">
       {/* Panel izquierdo: productos */}
       <div style={{
         flex: 3,

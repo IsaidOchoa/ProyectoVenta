@@ -1,7 +1,7 @@
 import React, { useState, useRef, useEffect } from 'react';
 import { FaShoppingCart, FaBars } from 'react-icons/fa';
 
-function NavBar({ onCartClick, onShowProviders, onShowCategories, onHistoryClick, onLogout, cartCount, onShowUsers, usuario }) {
+function NavBar({ onCartClick, onShowProviders, onShowCategories, onHistoryClick, onLogout, cartCount, onShowUsers, isAdmin, usuario }) {
   const [menuOpen, setMenuOpen] = useState(false);
   const menuRef = useRef(null);
 
@@ -76,24 +76,28 @@ function NavBar({ onCartClick, onShowProviders, onShowCategories, onHistoryClick
                   zIndex: 10,
                   minWidth: 220
                 }}>
-                <div
-                  style={{ padding: '0.9rem 1.5rem', cursor: 'pointer', borderBottom: '1px solid #eee', color: '#222', background: '#fff' }}
-                  onClick={() => { setMenuOpen(false); onShowUsers && onShowUsers(); }}
-                >
-                  Usuarios
-                </div>
-                <div
-                  style={{ padding: '0.9rem 1.5rem', cursor: 'pointer', borderBottom: '1px solid #eee', color: '#222', background: '#fff' }}
-                  onClick={() => { setMenuOpen(false); onShowProviders(); }}
-                >
-                  Proveedores
-                </div>
-                <div
-                  style={{ padding: '0.9rem 1.5rem', cursor: 'pointer', color: '#222', background: '#fff' }}
-                  onClick={() => { setMenuOpen(false); onShowCategories(); }}
-                >
-                  Categorías
-                </div>
+                {isAdmin && (
+                  <>
+                    <div
+                      style={{ padding: '0.9rem 1.5rem', cursor: 'pointer', borderBottom: '1px solid #eee', color: '#222', background: '#fff' }}
+                      onClick={() => { setMenuOpen(false); onShowUsers && onShowUsers(); }}
+                    >
+                      Usuarios
+                    </div>
+                    <div
+                      style={{ padding: '0.9rem 1.5rem', cursor: 'pointer', borderBottom: '1px solid #eee', color: '#222', background: '#fff' }}
+                      onClick={() => { setMenuOpen(false); onShowProviders(); }}
+                    >
+                      Proveedores
+                    </div>
+                    <div
+                      style={{ padding: '0.9rem 1.5rem', cursor: 'pointer', color: '#222', background: '#fff' }}
+                      onClick={() => { setMenuOpen(false); onShowCategories(); }}
+                    >
+                      Categorías
+                    </div>
+                  </>
+                )}
                 <div
                   style={{ padding: '0.9rem 1.5rem', cursor: 'pointer', borderBottom: '1px solid #eee', color: '#222', background: '#fff' }}
                   onClick={() => { setMenuOpen(false); onHistoryClick(); }}
