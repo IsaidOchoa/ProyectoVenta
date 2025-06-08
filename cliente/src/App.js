@@ -41,6 +41,7 @@ function App() {
   const [usuario, setUsuario] = useState(null);
   const [showRegister, setShowRegister] = useState(false);
   const [showUsersView, setShowUsersView] = useState(false);
+  const [productoAEditar, setProductoAEditar] = useState(null);
 
   // Recupera usuario y rol
   useEffect(() => {
@@ -187,10 +188,19 @@ function App() {
     showToast('Producto eliminado del carrito');
   };
 
-  const handleSearch = () => {
+  const handleClearCart = () => {
+    if (window.confirm('¿Estás seguro de que deseas vaciar todo el carrito?')) {
+      setCart([]);
+      fetch(`http://localhost/ProyectoVenta/public/api/carrito/${usuario.id}`, {
+        method: 'DELETE'
+      });
+      showToast('Carrito vaciado');
+    }
+  };
+
+  const handleSearch = (texto = busqueda) => {
     let filtro = productos.filter(p =>
-      p.nombre.toLowerCase().includes(busqueda.toLowerCase()) ||
-      p.descripcion.toLowerCase().includes(busqueda.toLowerCase())
+      p.nombre.toLowerCase().startsWith(texto.toLowerCase())
     );
     if (!isAdmin) {
       filtro = filtro.filter(p => p.estado === 1);
@@ -235,48 +245,35 @@ function App() {
   };
 
   const handlePay = async () => {
-    // El carrito ya está sincronizado con la BD, así que puedes usar el estado `cart`
-    const usuario = JSON.parse(localStorage.getItem('usuario'));
-    const body = {
-      productos: cart.map(item => ({
-        id: item.producto_id, // O item.id según tu estructura
-        cantidad: item.cantidad,
-        // Puedes agregar precio_unitario si lo necesitas
-      })),
-      usuario_id: usuario.id
-    };
-
-    const response = await fetch('http://localhost/ProyectoVenta/public/api/compras/realizar', {
-      method: 'POST',
-      headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify(body)
-    });
-
-    const text = await response.text();
-    let data = {};
-    try {
-      data = JSON.parse(text);
-    } catch (e) {
-      alert('Error inesperado en el servidor');
+    if (cart.length === 0) {
+      alert('No hay productos en el carrito');
       return;
     }
-    if (data.success) {
-      alert(data.message);
-      setCart([]);
-      // Vacía el carrito en la BD
-      await fetch(`http://localhost/ProyectoVenta/public/api/carrito/${usuario.id}`, {
-        method: 'DELETE'
+
+    try {
+      const response = await fetch('http://localhost/ProyectoVenta/public/api/compras/realizar', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json'
+          // No envíes Authorization ni usuario_id para esta prueba simple
+        },
+        body: JSON.stringify({
+          productos: cart.map(item => ({
+            id: item.producto_id || item.id, // Usa 'id'
+            cantidad: item.cantidad
+          }))
+        })
       });
-      setShowCart(false);
-      // Recarga productos
-      fetch('http://localhost/ProyectoVenta/public/api/productos')
-        .then(res => res.json())
-        .then(data => {
-          setProductos(data);
-          setProductosFiltrados(data);
-        });
-    } else {
-      alert(data.error || 'Error al realizar la compra');
+
+      const data = await response.json();
+      if (data.success) {
+        showToast('¡Stock actualizado!');
+        setCart([]);
+      } else {
+        alert(data.error || 'Error inesperado en el servidor uno');
+      }
+    } catch (error) {
+      alert('Error inesperado en el servidor dos');
     }
   };
 
@@ -336,6 +333,7 @@ function App() {
     setShowProvidersView(false);
     setShowCategoriesView(false);
     setShowUsersView(false);
+    setProductoAEditar(null); // <-- Limpia el producto a editar al volver
   };
 
   const handleProductClick = (producto) => {
@@ -421,7 +419,21 @@ function App() {
         <UsersView onBack={handleBackToHome} />
       ) : (
         <>
-          {showAddProduct && isAdmin && <AddProduct onBack={handleBackToHome} />}
+          {showAddProduct && isAdmin && (
+            <AddProduct
+              onBack={handleBackToHome}
+              initialData={productoAEditar || {}}
+              editMode={!!productoAEditar}
+              onProductUpdated={productoActualizado => {
+                setProductos(prev =>
+                  prev.map(p => p.id === productoActualizado.id ? productoActualizado : p)
+                );
+                setProductosFiltrados(prev =>
+                  prev.map(p => p.id === productoActualizado.id ? productoActualizado : p)
+                );
+              }}
+            />
+          )}
           {showAddCategory && isAdmin && <AddCategory onBack={handleBackToHome} />}
           {showAddProvider && isAdmin && <AddProvider onBack={handleBackToHome} />}
           {showEditProducts && isAdmin && <EditProducts onBack={handleBackToHome} />}
@@ -436,7 +448,8 @@ function App() {
               onAdd={handleAddToCart}
               onRemove={handleRemoveFromCart}
               onDelete={handleDeleteFromCart}
-              onPay={handlePay}
+              onClearCart={handleClearCart}
+              onPay={handlePay} // <--- aquí
               onBack={handleBackToHome}
             />
           )}

@@ -6,10 +6,16 @@ function Login({ onLogin, onShowRegister }) {
   const [contrasena, setContrasena] = useState('');
   const [loading, setLoading] = useState(false);
 
-  const handleSubmit = (e) => {
+  const handleSubmit = async (e) => {
     e.preventDefault();
     setLoading(true);
-    onLogin && onLogin({ correo, contrasena });
+    if (onLogin) {
+      try {
+        await onLogin({ correo, contrasena });
+      } finally {
+        setLoading(false); // Siempre deja de cargar, éxito o error
+      }
+    }
   };
 
   return (

@@ -296,3 +296,37 @@ html, body {
     padding: 1rem;
   }
 }
+
+/* Bordes de celdas */
+table, th, td {
+  border: 1px solid #ccc;
+  border-collapse: collapse;
+}
+
+/* Contorno negro y bordes redondeados para la tabla */
+table {
+  border-radius: 12px;
+  overflow: hidden;
+  border: 3px solid #222; /* <-- contorno negro y más grueso */
+}
+
+.selected-row {
+  background-color: #ffe082 !important;
+}
+
+/* Opcional: elimina el borde doble en las esquinas */
+th:first-child, td:first-child {
+  border-left: none;
+}
+th:last-child, td:last-child {
+  border-right: none;
+}
+
+.table-container {
+  background: #fff;
+  border-radius: 12px;
+  box-shadow: 0 2px 8px rgba(0,0,0,0.08);
+  padding: 1.5rem 1rem;
+  margin: 1.5rem 0;
+  border: 1.5px solid #e0e0e0; /* Borde suave como el de arriba */
+}

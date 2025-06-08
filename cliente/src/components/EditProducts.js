@@ -5,6 +5,7 @@ function EditProducts({ onBack }) {
   const [productos, setProductos] = useState([]);
   const [editProduct, setEditProduct] = useState(null);
   const [mensaje, setMensaje] = useState('');
+  const [selectedRow, setSelectedRow] = useState(null);
   const esAdmin = true; // Simulación de rol admin
 
   useEffect(() => {
@@ -18,13 +19,12 @@ function EditProducts({ onBack }) {
     const token = localStorage.getItem('token');
     const data = new FormData();
 
-    // Renombra los campos para que coincidan con el backend
     data.append('nombre', form.nombre);
     data.append('descripcion', form.descripcion);
     data.append('precio', form.precio);
     data.append('stock', form.stock);
-    data.append('categoria_id', form.categoria); // <-- cambia a categoria_id
-    data.append('proveedor_id', form.proveedor); // <-- cambia a proveedor_id
+    data.append('categoria_id', form.categoria || editProduct.categoria_id); // usa el valor anterior si no se cambia
+    data.append('proveedor_id', form.proveedor || editProduct.proveedor_id); // igual aquí
     if (form.imagen) {
       data.append('imagen', form.imagen);
     }
@@ -99,10 +99,11 @@ function EditProducts({ onBack }) {
           onCancel={() => setEditProduct(null)}
         />
       )}
-      <div style={{ overflowX: 'auto' }}>
+      <div className="table-container" style={{ overflowX: 'auto' }}>
         <table style={{ minWidth: 1400, borderCollapse: 'collapse' }}>
           <thead>
             <tr style={{ background: '#f4f4f4' }}>
+              <th style={{ padding: '12px 16px', minWidth: 60 }}>ID</th>
               <th style={{ padding: '12px 16px', minWidth: 180 }}>Nombre</th>
               <th style={{ padding: '12px 16px', minWidth: 260 }}>Descripción</th>
               <th style={{ padding: '12px 16px', minWidth: 100, textAlign: 'center' }}>Precio</th>
@@ -114,7 +115,12 @@ function EditProducts({ onBack }) {
           </thead>
           <tbody>
             {productos.map(producto => (
-              <tr key={producto.id}>
+              <tr
+                key={producto.id}
+                className={selectedRow === producto.id ? 'selected-row' : ''}
+                onClick={() => setSelectedRow(producto.id)}
+              >
+                <td style={{ padding: '10px 16px', minWidth: 60, textAlign: 'center' }}>{producto.id}</td>
                 <td style={{ padding: '10px 16px', minWidth: 180 }} title={producto.nombre}>
                   {producto.nombre.length > 30
                     ? producto.nombre.slice(0, 30) + '...'

@@ -17,7 +17,7 @@ class AuthMiddleware {
     }
 
     public static function verificarToken() {
-        $headers = apache_request_headers();
+        $headers = getallheaders(); // más compatible
         if (!isset($headers['Authorization'])) {
             header("HTTP/1.1 401 Unauthorized");
             echo json_encode(["error" => "Token no proporcionado"]);

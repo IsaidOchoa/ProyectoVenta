@@ -31,7 +31,10 @@ function SearchBar({ value, onChange, onSearch, sticky = false }) {
           type="text"
           placeholder="Buscar ..."
           value={value}
-          onChange={e => onChange(e.target.value)}
+          onChange={e => {
+            onChange(e.target.value);
+            onSearch(e.target.value); // Llama a la búsqueda en vivo
+          }}
           style={{
             width: '60%',
             padding: '0.5rem',

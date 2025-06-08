@@ -1,6 +1,6 @@
 import React, { useState, useEffect } from 'react';
 
-function AddProduct({ onBack, initialData = {}, onSubmit, editMode = false, onCancel }) {
+function AddProduct({ onBack, initialData = {}, onSubmit, editMode = false, onCancel, onProductUpdated }) {
   const [form, setForm] = useState({
     nombre: '',
     descripcion: '',
@@ -18,7 +18,13 @@ function AddProduct({ onBack, initialData = {}, onSubmit, editMode = false, onCa
     setForm(f => ({
       ...f,
       ...initialData,
-      imagen: null // No cargues la imagen existente, solo nueva si se selecciona
+      categoria: initialData.categoria_id
+        ? String(initialData.categoria_id)
+        : (initialData.categoria ? String(initialData.categoria) : ''),
+      proveedor: initialData.proveedor_id
+        ? String(initialData.proveedor_id)
+        : (initialData.proveedor ? String(initialData.proveedor) : ''),
+      imagen: null
     }));
   }, [initialData]);
 
@@ -35,7 +41,7 @@ function AddProduct({ onBack, initialData = {}, onSubmit, editMode = false, onCa
     const { name, value, files } = e.target;
     if (name === 'imagen' && files && files[0]) {
       const file = files[0];
-      const ext = file.name.toLowerCase().split('.').pop();
+      const ext = file.name.toLowerCase().trim().split('.').pop();
       if (!['jpg', 'jpeg'].includes(ext)) {
         setMensaje('Solo se permiten archivos .jpg o .jpeg');
         setForm(f => ({ ...f, imagen: null }));
@@ -53,7 +59,14 @@ function AddProduct({ onBack, initialData = {}, onSubmit, editMode = false, onCa
 
   const handleSubmit = async e => {
     e.preventDefault();
-    if (!form.nombre || !form.precio || !form.stock || !form.categoria || !form.proveedor) {
+    // Permite valores numéricos o strings no vacíos
+    if (
+      !form.nombre ||
+      !form.precio ||
+      !form.stock ||
+      (!form.categoria && form.categoria !== 0 && form.categoria !== '0') ||
+      (!form.proveedor && form.proveedor !== 0 && form.proveedor !== '0')
+    ) {
       setMensaje('Todos los campos son obligatorios');
       return;
     }
@@ -61,8 +74,49 @@ function AddProduct({ onBack, initialData = {}, onSubmit, editMode = false, onCa
       setMensaje('Debes seleccionar una imagen .jpg');
       return;
     }
-    if (onSubmit) {
-      onSubmit(form, setMensaje, setForm);
+
+    const formData = new FormData();
+    formData.append('nombre', form.nombre);
+    formData.append('descripcion', form.descripcion);
+    formData.append('precio', form.precio);
+    formData.append('stock', form.stock);
+    formData.append('categoria_id', form.categoria); // usa categoria_id
+    formData.append('proveedor_id', form.proveedor); // usa proveedor_id
+    if (form.imagen) formData.append('imagen', form.imagen);
+
+    const url = editMode
+      ? `http://localhost/ProyectoVenta/public/api/productos/Modificar/${initialData.id}`
+      : 'http://localhost/ProyectoVenta/public/api/productos/Crear';
+
+    const method = editMode ? 'POST' : 'POST'; // según tu rutas
+
+    const res = await fetch(url, {
+      method,
+      body: formData,
+      headers: {
+        Authorization: `Bearer ${localStorage.getItem('token')}`
+      }
+    });
+
+    const data = await res.json();
+    if (data.message && editMode && typeof onProductUpdated === 'function') {
+      // Vuelve a pedir el producto actualizado (puedes ajustar la URL según tu API)
+      fetch(`http://localhost/ProyectoVenta/public/api/productos/${initialData.id}`)
+        .then(res => res.json())
+        .then(productoActualizado => {
+          onProductUpdated(productoActualizado);
+          setMensaje(data.message);
+          setTimeout(() => {
+            if (typeof onBack === 'function') onBack();
+          }, 1000);
+        });
+    } else if (data.message) {
+      setMensaje(data.message);
+      setTimeout(() => {
+        if (typeof onBack === 'function') onBack();
+      }, 1000);
+    } else {
+      setMensaje(data.error || 'Error inesperado');
     }
   };
 
@@ -73,8 +127,24 @@ function AddProduct({ onBack, initialData = {}, onSubmit, editMode = false, onCa
       <form onSubmit={handleSubmit} style={{ display: 'flex', flexDirection: 'column', gap: 16 }}>
         <input name="nombre" placeholder="Nombre" value={form.nombre} onChange={handleChange} style={inputStyle} />
         <textarea name="descripcion" placeholder="Descripción" value={form.descripcion} onChange={handleChange} style={inputStyle} />
-        <input name="precio" type="number" placeholder="Precio" value={form.precio} onChange={handleChange} style={inputStyle} />
-        <input name="stock" type="number" placeholder="Stock" value={form.stock} onChange={handleChange} style={inputStyle} />
+        <input
+          name="precio"
+          type="number"
+          placeholder="Precio"
+          value={form.precio}
+          onChange={handleChange}
+          style={inputStyle}
+          onWheel={e => e.target.blur()}
+        />
+        <input
+          name="stock"
+          type="number"
+          placeholder="Stock"
+          value={form.stock}
+          onChange={handleChange}
+          style={inputStyle}
+          onWheel={e => e.target.blur()}
+        />
         <input
           name="imagen"
           type="file"
@@ -98,6 +168,15 @@ function AddProduct({ onBack, initialData = {}, onSubmit, editMode = false, onCa
             <option key={cat.id} value={cat.id}>{cat.nombre_categoria || cat.nombre}</option>
           ))}
         </select>
+        {editMode && initialData.categoria_id && (
+          <div style={{ fontSize: 14, color: '#555', marginTop: 4 }}>
+            Categoría actual: <span style={{ fontStyle: 'italic' }}>
+              {categorias.find(c => String(c.id) === String(initialData.categoria_id))?.nombre_categoria ||
+                categorias.find(c => String(c.id) === String(initialData.categoria_id))?.nombre}
+            </span>
+          </div>
+        )}
+
         <select
           name="proveedor"
           value={form.proveedor}
@@ -109,6 +188,13 @@ function AddProduct({ onBack, initialData = {}, onSubmit, editMode = false, onCa
             <option key={prov.id} value={prov.id}>{prov.nombre}</option>
           ))}
         </select>
+        {editMode && initialData.proveedor_id && (
+          <div style={{ fontSize: 14, color: '#555', marginTop: 4 }}>
+            Proveedor actual: <span style={{ fontStyle: 'italic' }}>
+              {proveedores.find(p => String(p.id) === String(initialData.proveedor_id))?.nombre}
+            </span>
+          </div>
+        )}
         <button type="submit" style={{
           background: '#FFD600', color: '#222', border: 'none', borderRadius: 6, padding: '0.8rem', fontWeight: 'bold', cursor: 'pointer'
         }}>{editMode ? 'Guardar cambios' : 'Agregar'}</button>
