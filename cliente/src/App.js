@@ -18,6 +18,7 @@ import ProductView from './components/ProductView';
 import Login from './components/Login';
 import RegisterView from './components/RegisterView';
 import UsersView from './components/UsersView';
+import Modal from './components/Modal';
 import {
   obtenerProductos,
   crearProducto,
@@ -34,7 +35,7 @@ import {
   eliminarDelCarrito,
   vaciarCarrito
 } from './services/CarritoService';
-import { realizarCompra } from './services/CompraService';
+import { realizarCompra, obtenerHistorial } from './services/CompraService';
 import './App.css';
 
 // Wrapper para detalle de producto usando useParams
@@ -98,6 +99,7 @@ function App() {
   const [usuario, setUsuario] = useState(null);
   const [showRegister, setShowRegister] = useState(false);
   const [productoAEditar, setProductoAEditar] = useState(null);
+  const [modalVentaOpen, setModalVentaOpen] = useState(false);
 
   const navigate = useNavigate();
 
@@ -133,15 +135,6 @@ function App() {
       });
   }, []);
 
-  // Historial de ejemplo
-  useEffect(() => {
-    setHistorial([
-      { id: 1, nombre: 'Ticket 1', total: 120.50, fecha: '2024-06-01', estado: 'en bodega' },
-      { id: 2, nombre: 'Ticket 2', total: 89.99, fecha: '2024-06-10', estado: 'en camino' },
-      { id: 3, nombre: 'Ticket 3', total: 45.00, fecha: '2024-06-15', estado: 'entregado' }
-    ]);
-  }, []);
-
   // Guarda el carrito en localStorage por usuario
   useEffect(() => {
     if (usuario) {
@@ -167,6 +160,15 @@ function App() {
       obtenerCarrito(usuario.id)
         .then(data => setCart(data.productos || []))
         .catch(() => setCart([]));
+    }
+  }, [usuario]);
+
+  // Carga el historial de compras del usuario
+  useEffect(() => {
+    if (usuario) {
+      obtenerHistorial(usuario.id)
+        .then(setHistorial)
+        .catch(() => setHistorial([]));
     }
   }, [usuario]);
 
@@ -249,15 +251,19 @@ function App() {
       return;
     }
     try {
-      const data = await realizarCompra(
-        cart.map(item => ({
+      const data = await realizarCompra({
+        usuario_id: usuario.id,
+        productos: cart.map(item => ({
           id: item.producto_id || item.id,
           cantidad: item.cantidad
         }))
-      );
+      });
       if (data.success) {
         showToast('¡Stock actualizado!');
         setCart([]);
+        setModalVentaOpen(true); // <-- Abre el modal de éxito
+        const nuevoHistorial = await obtenerHistorial(usuario.id);
+        setHistorial(nuevoHistorial);
       } else {
         alert(data.error || 'Error inesperado en el servidor uno');
       }
@@ -446,6 +452,39 @@ function App() {
           <Toast key={toast.id} mensaje={toast.mensaje} visible={toast.visible} />
         ))}
       </div>
+      <Modal
+        open={modalVentaOpen}
+        onClose={() => setModalVentaOpen(false)}
+        title={null}
+        showClose={false}
+      >
+        <div style={{ textAlign: 'center' }}>
+          <h3 style={{ marginTop: 0, marginBottom: 24, textAlign: 'center', fontWeight: 'bold' }}>
+            ¡Venta realizada con éxito!
+          </h3>
+          <p>Gracias por su compra.</p>
+          <p>Su pedido está siendo procesado y será enviado a la dirección registrada.</p>
+          <button
+            onClick={() => {
+              setModalVentaOpen(false);
+              navigate('/');
+            }}
+            style={{
+              background: '#FFD600',
+              color: '#222',
+              border: 'none',
+              borderRadius: 6,
+              padding: '10px 32px',
+              fontWeight: 'bold',
+              fontSize: '1rem',
+              marginTop: 18,
+              cursor: 'pointer'
+            }}
+          >
+            Aceptar
+          </button>
+        </div>
+      </Modal>
     </>
   );
 }

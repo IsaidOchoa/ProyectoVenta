@@ -330,3 +330,13 @@ th:last-child, td:last-child {
   margin: 1.5rem 0;
   border: 1.5px solid #e0e0e0; /* Borde suave como el de arriba */
 }
+
+/* Estilo para el texto del producto en la tabla */
+.product-name-cell {
+  max-width: 210px;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+  display: inline-block;
+  vertical-align: middle;
+}

@@ -1,13 +1,25 @@
-import React from 'react';
-import { FaArrowLeft } from 'react-icons/fa';
+import React, { useState } from 'react';
+import { FaArrowLeft, FaTrash } from 'react-icons/fa';
+import PurchaseTicket from './PurchaseTicket';
+import Modal from './Modal';
 
-const estadoColor = {
-  'en bodega': '#888',
-  'en camino': '#e6b800',
-  'entregado': '#2ecc40'
-};
+function PurchaseHistory({ historial: historialProp, onBack, onDeleteAllHistory }) {
+  const [showDeleteAllModal, setShowDeleteAllModal] = useState(false);
+  const [historial, setHistorial] = useState(historialProp || []);
 
-function PurchaseHistory({ historial, onBack }) {
+  // Eliminar un ticket individual
+  const handleDeleteTicket = (ticketId) => {
+    setHistorial(historial.filter(c => c.id !== ticketId));
+    // Aquí puedes llamar a tu API si es necesario
+  };
+
+  // Eliminar todo el historial
+  const handleDeleteAll = () => {
+    setHistorial([]);
+    if (onDeleteAllHistory) onDeleteAllHistory();
+    setShowDeleteAllModal(false);
+  };
+
   return (
     <div style={{ padding: '2rem', background: '#fafbfc', minHeight: '100vh' }}>
       <div style={{ display: 'flex', alignItems: 'center', marginBottom: '2rem' }}>
@@ -21,41 +33,80 @@ function PurchaseHistory({ historial, onBack }) {
         </button>
         <h2 style={{ margin: 0 }}>Historial de compras</h2>
       </div>
+      <div style={{ display: 'flex', justifyContent: 'flex-end', marginBottom: 24 }}>
+        <button
+          onClick={() => setShowDeleteAllModal(true)}
+          style={{
+            background: 'white',
+            border: '2px solid #e53935',
+            color: '#e53935',
+            cursor: 'pointer',
+            fontSize: 20,
+            display: 'flex',
+            alignItems: 'center',
+            gap: 8,
+            fontWeight: 'bold',
+            borderRadius: 12,
+            padding: '10px 28px',
+            transition: 'background 0.2s',
+          }}
+          title="Eliminar todo el historial"
+        >
+          <FaTrash />
+          Vaciar historial
+        </button>
+      </div>
       {historial.length === 0 ? (
         <p>No hay compras registradas.</p>
       ) : (
         historial.map((compra, idx) => (
-          <div key={compra.id} style={{
-            background: '#f4f4f4',
-            borderRadius: 10,
-            padding: '1.2rem 2rem',
-            marginBottom: '1.2rem',
-            display: 'flex',
-            alignItems: 'center',
-            justifyContent: 'space-between'
-          }}>
-            <div style={{ display: 'flex', flexDirection: 'column', flex: 1 }}>
-              <div style={{ fontWeight: 'bold', fontSize: '1.1rem', display: 'flex', alignItems: 'center', gap: 24 }}>
-                Boleto {idx + 1}
-                <span style={{ fontWeight: 'normal', color: '#222', fontSize: '1rem' }}>
-                  Total: ${compra.total}
-                </span>
-                <span style={{ fontWeight: 'normal', color: '#666', fontSize: '0.98rem' }}>
-                  Fecha: {compra.fecha}
-                </span>
-              </div>
-            </div>
-            <div style={{
-              fontWeight: 'bold',
-              color: estadoColor[compra.estado] || '#888',
-              minWidth: 110,
-              textAlign: 'right'
-            }}>
-              {compra.estado}
-            </div>
-          </div>
+          <PurchaseTicket
+            key={compra.id}
+            compra={compra}
+            idx={idx}
+            onDeleteTicket={handleDeleteTicket}
+          />
         ))
       )}
+      <Modal
+        open={showDeleteAllModal}
+        onClose={() => setShowDeleteAllModal(false)}
+        title="Vaciar historial"
+        showClose={true}
+      >
+        <div style={{ textAlign: 'center' }}>
+          <p>¿Seguro que deseas eliminar todo el historial de compras?</p>
+          <button
+            onClick={handleDeleteAll}
+            style={{
+              background: '#e53935',
+              color: '#fff',
+              border: 'none',
+              borderRadius: 6,
+              padding: '8px 24px',
+              fontWeight: 'bold',
+              marginRight: 12,
+              cursor: 'pointer'
+            }}
+          >
+            Eliminar todo
+          </button>
+          <button
+            onClick={() => setShowDeleteAllModal(false)}
+            style={{
+              background: '#eee',
+              color: '#222',
+              border: 'none',
+              borderRadius: 6,
+              padding: '8px 24px',
+              fontWeight: 'bold',
+              cursor: 'pointer'
+            }}
+          >
+            Cancelar
+          </button>
+        </div>
+      </Modal>
     </div>
   );
 }

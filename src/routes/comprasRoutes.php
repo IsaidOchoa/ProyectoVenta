@@ -60,6 +60,16 @@ if (strpos($request_uri, '/api/compras') === 0) {
         exit;
     }
 
+    if ($request_method === "GET" && preg_match('/\/api\/compras\/historial\/(\d+)/', $request_uri, $matches)) {
+        ComprasController::historialPorUsuario($matches[1]);
+        exit;
+    }
+
+    if ($request_method === "GET" && preg_match('/\/api\/compras\/detalle\/(\d+)/', $request_uri, $matches)) {
+        ComprasController::detalleVenta($matches[1]);
+        exit;
+    }
+
     // Ruta no encontrada dentro de /api/compras
     file_put_contents(__DIR__ . '/debug.log', "Ruta no encontrada dentro de /api/compras\n", FILE_APPEND);
     header("HTTP/1.1 404 Not Found");

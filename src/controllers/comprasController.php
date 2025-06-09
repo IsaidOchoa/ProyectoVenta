@@ -42,7 +42,46 @@ class ComprasController {
         }
 
         try {
-            CompraService::realizarCompra($db, $cart['productos']);
+            $usuario_id = $cart['usuario_id']; // <-- AGREGA ESTA LÍNEA
+            $productos = $cart['productos'];
+            // 1. Calcular total
+            $total = 0;
+            foreach ($productos as $item) {
+                $stmt = $db->prepare("SELECT nombre, precio FROM productos WHERE id = ?");
+                $stmt->execute([$item['id']]);
+                $prod = $stmt->fetch(PDO::FETCH_ASSOC);
+                $total += $prod['precio'] * $item['cantidad'];
+            }
+
+            // 2. Insertar en ventas
+            $stmt = $db->prepare("INSERT INTO ventas (usuario_id, total) VALUES (?, ?)");
+            $stmt->execute([$usuario_id, $total]);
+            $venta_id = $db->lastInsertId();
+
+            // 3. Insertar en venta_detalle y actualizar stock
+            foreach ($productos as $item) {
+                $stmt = $db->prepare("SELECT nombre, precio FROM productos WHERE id = ?");
+                $stmt->execute([$item['id']]);
+                $prod = $stmt->fetch(PDO::FETCH_ASSOC);
+
+                $stmt = $db->prepare("INSERT INTO venta_detalle (venta_id, producto_id, nombre_producto_snapshot, precio_unitario, cantidad, total)
+                    VALUES (?, ?, ?, ?, ?, ?)");
+                $stmt->execute([
+                    $venta_id,
+                    $item['id'],
+                    $prod['nombre'],
+                    $prod['precio'],
+                    $item['cantidad'],
+                    $prod['precio'] * $item['cantidad']
+                ]);
+
+                // Actualizar stock
+                ProductoService::actualizarStock($db, $item['id'], -$item['cantidad']);
+            }
+
+            // Vaciar carrito del usuario
+            $stmt = $db->prepare("DELETE FROM carrito WHERE usuario_id = ?");
+            $stmt->execute([$usuario_id]);
 
             http_response_code(200);
             echo json_encode([
@@ -61,6 +100,25 @@ class ComprasController {
             ]);
         }
         exit; // <-- Asegúrate de terminar aquí para evitar cualquier salida extra
+    }
+
+    public static function historialPorUsuario($usuario_id) {
+        $db = (new Database())->getConnection();
+        $stmt = $db->prepare("SELECT id, total, fecha, estado FROM ventas WHERE usuario_id = ? ORDER BY fecha DESC");
+        $stmt->execute([$usuario_id]);
+        $ventas = $stmt->fetchAll(PDO::FETCH_ASSOC);
+
+        echo json_encode($ventas);
+        exit;
+    }
+
+    public static function detalleVenta($venta_id) {
+        $db = (new Database())->getConnection();
+        $stmt = $db->prepare("SELECT nombre_producto_snapshot, precio_unitario, cantidad, total FROM venta_detalle WHERE venta_id = ?");
+        $stmt->execute([$venta_id]);
+        $detalles = $stmt->fetchAll(PDO::FETCH_ASSOC);
+        echo json_encode($detalles);
+        exit;
     }
 
     // Otros métodos...
