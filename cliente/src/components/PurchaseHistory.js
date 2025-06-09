@@ -2,26 +2,50 @@ import React, { useState } from 'react';
 import { FaArrowLeft, FaTrash } from 'react-icons/fa';
 import PurchaseTicket from './PurchaseTicket';
 import Modal from './Modal';
+import Toast from './Toast'; // Asegúrate de importar el Toast
+import { eliminarTicket, eliminarHistorial, obtenerHistorial } from '../services/CompraService';
 
-function PurchaseHistory({ historial: historialProp, onBack, onDeleteAllHistory }) {
+function PurchaseHistory({ historial: historialProp, usuario_id, onBack, onDeleteAllHistory }) {
   const [showDeleteAllModal, setShowDeleteAllModal] = useState(false);
   const [historial, setHistorial] = useState(historialProp || []);
+  const [toast, setToast] = useState({ visible: false, mensaje: '' });
+
+  // Mostrar toast por 2 segundos
+  const showToast = (mensaje) => {
+    setToast({ visible: true, mensaje });
+    setTimeout(() => setToast({ visible: false, mensaje: '' }), 2000);
+  };
 
   // Eliminar un ticket individual
-  const handleDeleteTicket = (ticketId) => {
-    setHistorial(historial.filter(c => c.id !== ticketId));
-    // Aquí puedes llamar a tu API si es necesario
+  const handleDeleteTicket = async (ticketId) => {
+    try {
+      await eliminarTicket(ticketId);
+      setHistorial(historial.filter(c => c.id !== ticketId));
+      showToast('Ticket eliminado correctamente');
+    } catch (e) {
+      showToast('Error al eliminar ticket');
+    }
   };
 
   // Eliminar todo el historial
-  const handleDeleteAll = () => {
-    setHistorial([]);
-    if (onDeleteAllHistory) onDeleteAllHistory();
-    setShowDeleteAllModal(false);
+  const handleDeleteAll = async () => {
+    try {
+      console.log('usuario_id:', usuario_id);
+      await eliminarHistorial(usuario_id);
+      // Vuelve a consultar el historial desde el backend
+      const nuevoHistorial = await obtenerHistorial(usuario_id);
+      setHistorial(nuevoHistorial);
+      if (onDeleteAllHistory) onDeleteAllHistory();
+      setShowDeleteAllModal(false);
+      showToast('Historial eliminado correctamente');
+    } catch (e) {
+      showToast('Error al eliminar historial');
+    }
   };
 
   return (
     <div style={{ padding: '2rem', background: '#fafbfc', minHeight: '100vh' }}>
+      <Toast mensaje={toast.mensaje} visible={toast.visible} />
       <div style={{ display: 'flex', alignItems: 'center', marginBottom: '2rem' }}>
         <button onClick={onBack} style={{
           background: 'none',
@@ -63,7 +87,7 @@ function PurchaseHistory({ historial: historialProp, onBack, onDeleteAllHistory 
           <PurchaseTicket
             key={compra.id}
             compra={compra}
-            idx={idx}
+            idx={historial.length - idx} // Cambia aquí
             onDeleteTicket={handleDeleteTicket}
           />
         ))

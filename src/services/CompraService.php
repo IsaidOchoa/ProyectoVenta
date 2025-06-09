@@ -21,5 +21,35 @@ class CompraService {
 
         return true;
     }
+
+    public static function eliminarCompra($db, $ventaId) {
+        try {
+            $db->beginTransaction();
+            $stmtDetalle = $db->prepare("DELETE FROM venta_detalle WHERE venta_id = ?");
+            $stmtDetalle->execute([$ventaId]);
+            $stmtVenta = $db->prepare("DELETE FROM ventas WHERE id = ?");
+            $result = $stmtVenta->execute([$ventaId]);
+            $db->commit();
+            return $result;
+        } catch (Exception $e) {
+            $db->rollBack();
+            return false;
+        }
+    }
+
+    public static function eliminarHistorial($db, $usuarioId) {
+        try {
+            $db->beginTransaction();
+            $stmtDetalle = $db->prepare("DELETE FROM venta_detalle WHERE venta_id IN (SELECT id FROM ventas WHERE usuario_id = ?)");
+            $stmtDetalle->execute([$usuarioId]);
+            $stmtVenta = $db->prepare("DELETE FROM ventas WHERE usuario_id = ?");
+            $result = $stmtVenta->execute([$usuarioId]);
+            $db->commit();
+            return $result;
+        } catch (Exception $e) {
+            $db->rollBack();
+            return false;
+        }
+    }
 }
 ?>

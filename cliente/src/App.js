@@ -384,7 +384,7 @@ function App() {
           />
         } />
         <Route path="/historial" element={
-          <PurchaseHistory historial={historial} onBack={() => navigate('/')} />
+          <PurchaseHistory usuario_id={usuario?.id} historial={historial} onBack={() => navigate('/')} />
         } />
         <Route path="/agregar-producto" element={
           isAdmin ? (

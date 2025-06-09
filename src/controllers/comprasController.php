@@ -121,6 +121,15 @@ class ComprasController {
         exit;
     }
 
-    // Otros métodos...
+    public static function eliminarVenta($ventaId) {
+        $db = (new Database())->getConnection();
+        return CompraService::eliminarCompra($db, $ventaId);
+    }
+
+    public static function eliminarHistorialUsuario($usuarioId) {
+        $db = (new Database())->getConnection();
+        return CompraService::eliminarHistorial($db, $usuarioId);
+    }
 }
+
 ?>

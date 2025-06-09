@@ -51,7 +51,7 @@ function PurchaseTicket({ compra, idx, onDeleteTicket }) {
       >
         <div style={{ display: 'flex', flexDirection: 'column', flex: 1 }}>
           <div style={{ fontWeight: 'bold', fontSize: '1.1rem', display: 'flex', alignItems: 'center', gap: 24 }}>
-            <span>Ticket {idx + 1}</span>
+            <span>Ticket {idx}</span>
             <span style={{ fontWeight: 'normal', color: '#222', fontSize: '1rem' }}>
               Total: ${compra.total}
             </span>

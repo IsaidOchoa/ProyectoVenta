@@ -70,6 +70,29 @@ if (strpos($request_uri, '/api/compras') === 0) {
         exit;
     }
 
+    if ($request_method === "DELETE" && preg_match('/\/api\/compras\/eliminar\/(\d+)/', $request_uri, $matches)) {
+        $ventaId = (int)$matches[1];
+        $result = ComprasController::eliminarVenta($ventaId);
+        if ($result) {
+            echo json_encode(['success' => true]);
+        } else {
+            http_response_code(400);
+            echo json_encode(['success' => false, 'error' => 'No se pudo eliminar']);
+        }
+        exit;
+    }
+    
+    if ($request_method === "DELETE" && preg_match('/\/api\/compras\/historial\/(\d+)/', $request_uri, $matches)) {
+        $usuarioId = $matches[1];
+        if ($usuarioId && ComprasController::eliminarHistorialUsuario($usuarioId)) {
+            echo json_encode(['success' => true]);
+        } else {
+            http_response_code(400);
+            echo json_encode(['success' => false, 'error' => 'No se pudo eliminar el historial']);
+        }
+        exit;
+    }
+
     // Ruta no encontrada dentro de /api/compras
     file_put_contents(__DIR__ . '/debug.log', "Ruta no encontrada dentro de /api/compras\n", FILE_APPEND);
     header("HTTP/1.1 404 Not Found");
