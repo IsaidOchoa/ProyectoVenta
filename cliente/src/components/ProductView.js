@@ -1,7 +1,15 @@
-import React from 'react';
+import React, { useEffect, useState } from 'react';
 import { FaArrowLeft } from 'react-icons/fa';
+import { obtenerProductos } from '../services/ProductoService';
 
-function ProductView({ producto, productos, onAddToCart, onSelectProduct, onBack }) {
+function ProductView({ producto, onAddToCart, onSelectProduct, onBack }) {
+  const [productos, setProductos] = useState([]);
+
+  useEffect(() => {
+    obtenerProductos()
+      .then(data => setProductos(Array.isArray(data) ? data : []));
+  }, []);
+
   if (!producto) return null;
 
   // Filtrar productos similares (misma categoría, distinto id)
@@ -24,8 +32,8 @@ function ProductView({ producto, productos, onAddToCart, onSelectProduct, onBack
         width: '100%',
         display: 'flex',
         alignItems: 'center',
-        marginBottom: 32, // Más espacio para separar del contenido principal
-        minHeight: 48 // Opcional: asegura altura mínima
+        marginBottom: 32,
+        minHeight: 48
       }}>
         <button
           onClick={onBack}
@@ -80,7 +88,7 @@ function ProductView({ producto, productos, onAddToCart, onSelectProduct, onBack
         </div>
         {/* Info central alineada arriba y separada */}
         <div style={{
-          flex: 0.8, // <-- antes era 1.2, ahora es más pequeña
+          flex: 0.8,
           display: 'flex',
           flexDirection: 'column',
           justifyContent: 'flex-start',
@@ -88,7 +96,7 @@ function ProductView({ producto, productos, onAddToCart, onSelectProduct, onBack
           marginLeft: 40,
           height: '100%',
           paddingTop: 0,
-          maxWidth: 400 // <-- puedes ajustar este valor según lo que necesites
+          maxWidth: 400
         }}>
           <h2 style={{
             fontWeight: 'bold',
@@ -120,13 +128,11 @@ function ProductView({ producto, productos, onAddToCart, onSelectProduct, onBack
         </div>
         {/* Botón agregar y similares */}
         <div style={{
-          // flex: 1, // <-- quítalo o cámbialo por width: 'auto'
           display: 'flex',
           flexDirection: 'column',
           alignItems: 'center',
           justifyContent: 'flex-start',
-          // marginLeft: 40, // <-- quítalo o ponlo más pequeño si quieres
-          marginRight: 80 // <-- separa del borde derecho
+          marginRight: 80
         }}>
           <button
             onClick={() => onAddToCart(producto)}

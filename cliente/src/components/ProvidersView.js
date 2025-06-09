@@ -1,5 +1,11 @@
 import React, { useEffect, useState } from 'react';
 import SearchBar from './SearchBar';
+import {
+  obtenerProveedores,
+  crearProveedor,
+  actualizarProveedor,
+  eliminarProveedor
+} from '../services/ProveedorService';
 
 function ProvidersView({ onBack }) {
   const [proveedores, setProveedores] = useState([]);
@@ -10,12 +16,10 @@ function ProvidersView({ onBack }) {
   const [agregando, setAgregando] = useState(false);
   const [busqueda, setBusqueda] = useState('');
 
-  const API_URL = 'http://localhost/ProyectoVenta/public/api/proveedores';
-
   useEffect(() => {
-    fetch(API_URL)
-      .then(res => res.json())
-      .then(data => setProveedores(Array.isArray(data) ? data : []));
+    obtenerProveedores()
+      .then(data => setProveedores(Array.isArray(data) ? data : []))
+      .catch(() => setMensaje('Error al cargar proveedores'));
   }, []);
 
   const handleEdit = (prov) => {
@@ -30,32 +34,32 @@ function ProvidersView({ onBack }) {
   };
 
   const handleSave = async (prov) => {
-    const res = await fetch(`${API_URL}/Modificar/${prov.id}`, {
-      method: 'PUT',
-      headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify({ nombre: editForm.nombre, direccion: editForm.direccion, telefono: editForm.telefono })
-    });
-    const result = await res.json();
-    if (result.message) {
-      setProveedores(proveedores.map(p => p.id === prov.id ? { ...p, ...editForm } : p));
-      setMensaje('Proveedor actualizado');
-      setEditId(null);
-    } else {
-      setMensaje(result.error || 'Error al actualizar');
+    try {
+      const result = await actualizarProveedor(prov.id, editForm);
+      if (result.message || result.success) {
+        setProveedores(proveedores.map(p => p.id === prov.id ? { ...p, ...editForm } : p));
+        setMensaje('Proveedor actualizado');
+        setEditId(null);
+      } else {
+        setMensaje(result.error || 'Error al actualizar');
+      }
+    } catch {
+      setMensaje('Error de conexión');
     }
   };
 
   const handleDelete = async (prov) => {
     if (!window.confirm(`¿Seguro que deseas eliminar el proveedor "${prov.nombre}"?`)) return;
-    const res = await fetch(`${API_URL}/Eliminar/${prov.id}`, {
-      method: 'DELETE'
-    });
-    const result = await res.json();
-    if (result.message) {
-      setProveedores(proveedores.filter(p => p.id !== prov.id));
-      setMensaje(`El proveedor "${prov.nombre}" ha sido eliminado`);
-    } else {
-      setMensaje(result.error || 'Error al eliminar');
+    try {
+      const result = await eliminarProveedor(prov.id);
+      if (result.message || result.success) {
+        setProveedores(proveedores.filter(p => p.id !== prov.id));
+        setMensaje(`El proveedor "${prov.nombre}" ha sido eliminado`);
+      } else {
+        setMensaje(result.error || 'Error al eliminar');
+      }
+    } catch {
+      setMensaje('Error de conexión');
     }
   };
 
@@ -71,21 +75,20 @@ function ProvidersView({ onBack }) {
       return;
     }
     setAgregando(true);
-    const res = await fetch(`${API_URL}/Crear`, {
-      method: 'POST',
-      headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify(nuevoProveedor)
-    });
-    const result = await res.json();
-    setAgregando(false);
-    if (result.message) {
-      fetch(API_URL)
-        .then(res => res.json())
-        .then(data => setProveedores(Array.isArray(data) ? data : []));
-      setMensaje('Proveedor agregado');
-      setNuevoProveedor({ nombre: '', direccion: '', telefono: '' });
-    } else {
-      setMensaje(result.error || 'Error al agregar');
+    try {
+      const result = await crearProveedor(nuevoProveedor);
+      setAgregando(false);
+      if (result.message || result.success) {
+        const data = await obtenerProveedores();
+        setProveedores(Array.isArray(data) ? data : []);
+        setMensaje('Proveedor agregado');
+        setNuevoProveedor({ nombre: '', direccion: '', telefono: '' });
+      } else {
+        setMensaje(result.error || 'Error al agregar');
+      }
+    } catch {
+      setAgregando(false);
+      setMensaje('Error de conexión');
     }
   };
 
@@ -109,13 +112,11 @@ function ProvidersView({ onBack }) {
         &larr; Volver
       </button>
       <h2 style={{ textAlign: 'left', marginLeft: 0 }}>Proveedores</h2>
-      {/* Barra de búsqueda arriba */}
       <SearchBar
         value={busqueda}
         onChange={setBusqueda}
         onSearch={() => {}}
       />
-      {/* Formulario tipo tarjeta */}
       <form onSubmit={handleAdd} style={{
         background: '#f9f9f9',
         border: '1px solid #ddd',

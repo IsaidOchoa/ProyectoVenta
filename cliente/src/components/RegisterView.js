@@ -1,5 +1,6 @@
 import React, { useState } from 'react';
 import styled from 'styled-components';
+import { crearUsuario } from '../services/UsuarioService'; // <-- Importa el servicio
 
 const Register = ({ onShowLogin }) => {
   const [form, setForm] = useState({
@@ -25,25 +26,8 @@ const Register = ({ onShowLogin }) => {
   const handleSubmit = async e => {
     e.preventDefault();
     setMensaje('');
-    console.log('Datos enviados al backend:', form); // <-- Aquí
     try {
-      const res = await fetch('http://localhost/ProyectoVenta/public/api/usuarios/registrar', {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify(form)
-      });
-      const text = await res.text();
-      console.log('Respuesta cruda:', text);
-
-      let data = {};
-      try {
-        data = JSON.parse(text);
-      } catch (e) {
-        setMensaje('Error inesperado en el servidor');
-        console.error('Error al parsear JSON:', e);
-        return;
-      }
-
+      const data = await crearUsuario(form); // <-- Usa el servicio
       if (data.success) {
         setMensaje('¡Registro exitoso! Ahora puedes iniciar sesión.');
       } else {

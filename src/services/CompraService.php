@@ -16,11 +16,6 @@ class CompraService {
             $productoId = $item['id'];
             $cantidad = $item['cantidad'];
 
-            $producto = ProductoService::obtenerPorId($db, $productoId);
-            if (!$producto || $producto['stock'] < $cantidad) {
-                throw new Exception("Stock insuficiente para el producto con ID $productoId");
-            }
-
             ProductoService::actualizarStock($db, $productoId, -$cantidad);
         }
 

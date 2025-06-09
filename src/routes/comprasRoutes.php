@@ -11,44 +11,37 @@ if ($_SERVER['REQUEST_METHOD'] === 'OPTIONS') {
 }
 
 require_once __DIR__ . '/../controllers/comprasController.php';
-require_once __DIR__ . '/../../middleware/Cors.php';
-require_once __DIR__ . '/../../middleware/LoggingMiddleware.php';
-require_once __DIR__ . '/../../middleware/AuthMiddleware.php';
 
 $request_uri = parse_url($_SERVER['REQUEST_URI'], PHP_URL_PATH);
 $request_method = $_SERVER["REQUEST_METHOD"];
 
-// Logging personalizado para depuración
-file_put_contents(__DIR__ . '/debug.log', "INICIO rutas | URI: $request_uri | METHOD: $request_method\n", FILE_APPEND);
+// 🔧 Normalizar la URI quitando /ProyectoVenta/public si viene desde ahí
+$request_uri = str_replace('/ProyectoVenta/public', '', $request_uri);
 
-LoggingMiddleware::registrarSolicitud();
+// Logging personalizado
+file_put_contents(__DIR__ . '/debug.log', "INICIO rutas | URI: $request_uri | METHOD: $request_method\n", FILE_APPEND);
 
 // Procesar solo rutas que comiencen con /api/compras
 if (strpos($request_uri, '/api/compras') === 0) {
 
-    // Ruta específica para realizar una compra
-    if ($request_method === "POST" && preg_match('#^/api/compras/realizar/?$#', $request_uri)) {
-        file_put_contents(__DIR__ . '/debug.log', "Coincide /api/compras/realizar\n", FILE_APPEND);
-        // AuthMiddleware::verificarToken(); // <-- comenta o elimina esta línea temporalmente
+    if ($request_method === "POST" && $request_uri === '/api/compras/realizar') {
+        file_put_contents(__DIR__ . '/debug.log', "Coincide realizar compra\n", FILE_APPEND);
         ComprasController::realizarCompra();
         exit;
     }
 
-    // Ruta para agregar un producto al carrito
     if ($request_method === "POST" && $request_uri === '/api/compras/carrito/agregar') {
         file_put_contents(__DIR__ . '/debug.log', "Coincide /api/compras/carrito/agregar\n", FILE_APPEND);
         ComprasController::agregarProductoCarrito();
         exit;
     }
 
-    // Ruta para obtener los productos del carrito
     if ($request_method === "GET" && $request_uri === '/api/compras/productos') {
         file_put_contents(__DIR__ . '/debug.log', "Coincide /api/compras/productos\n", FILE_APPEND);
         ComprasController::obtenerProductos();
         exit;
     }
 
-    // Ruta para eliminar un producto del carrito
     if ($request_method === "DELETE" && preg_match('/\/api\/compras\/carrito\/eliminar\/(\d+)/', $request_uri, $matches)) {
         $id = filter_var($matches[1], FILTER_VALIDATE_INT);
         if (!$id) {
@@ -61,7 +54,6 @@ if (strpos($request_uri, '/api/compras') === 0) {
         exit;
     }
 
-    // Ruta para vaciar el carrito
     if ($request_method === "DELETE" && $request_uri === '/api/compras/carrito/vaciar') {
         file_put_contents(__DIR__ . '/debug.log', "Coincide vaciar carrito\n", FILE_APPEND);
         ComprasController::vaciarCarrito();

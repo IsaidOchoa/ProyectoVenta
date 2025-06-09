@@ -1,5 +1,11 @@
 import React, { useEffect, useState } from 'react';
 import AddProduct from './AddProduct';
+import {
+  obtenerProductos,
+  actualizarProducto,
+  activarProducto,
+  desactivarProducto
+} from '../services/ProductoService';
 
 function EditProducts({ onBack }) {
   const [productos, setProductos] = useState([]);
@@ -9,76 +15,58 @@ function EditProducts({ onBack }) {
   const esAdmin = true; // Simulación de rol admin
 
   useEffect(() => {
-    fetch('http://localhost/ProyectoVenta/public/api/productos')
-      .then(res => res.json())
-      .then(data => setProductos(data));
+    cargarProductos();
   }, []);
+
+  const cargarProductos = () => {
+    obtenerProductos()
+      .then(data => setProductos(Array.isArray(data) ? data : []))
+      .catch(() => setMensaje('Error al cargar productos'));
+  };
 
   // Función para actualizar producto
   const handleEditSubmit = async (form, setMensaje, setForm) => {
-    const token = localStorage.getItem('token');
-    const data = new FormData();
-
-    data.append('nombre', form.nombre);
-    data.append('descripcion', form.descripcion);
-    data.append('precio', form.precio);
-    data.append('stock', form.stock);
-    data.append('categoria_id', form.categoria || editProduct.categoria_id); // usa el valor anterior si no se cambia
-    data.append('proveedor_id', form.proveedor || editProduct.proveedor_id); // igual aquí
-    if (form.imagen) {
-      data.append('imagen', form.imagen);
-    }
-
-    for (let pair of data.entries()) {
-      console.log(pair[0]+ ': ' + pair[1]);
-    }
-
-    const res = await fetch(`http://localhost/ProyectoVenta/public/api/productos/Modificar/${editProduct.id}`, {
-      method: 'POST', // <--- CAMBIA A POST
-      headers: {
-        'Authorization': `Bearer ${token}`
-      },
-      body: data
-    });
-    const result = await res.json();
-    setMensaje(result.success ? 'Producto actualizado correctamente' : (result.message || 'Error al actualizar producto'));
-    if (result.success) {
-      setProductos(productos.map(p => p.id === editProduct.id ? { ...p, ...form } : p));
-      setEditProduct(null);
+    try {
+      const data = new FormData();
+      data.append('nombre', form.nombre);
+      data.append('descripcion', form.descripcion);
+      data.append('precio', form.precio);
+      data.append('stock', form.stock);
+      data.append('categoria_id', form.categoria || editProduct.categoria_id);
+      data.append('proveedor_id', form.proveedor || editProduct.proveedor_id);
+      if (form.imagen) {
+        data.append('imagen', form.imagen);
+      }
+      const result = await actualizarProducto(editProduct.id, data);
+      setMensaje(result.success ? 'Producto actualizado correctamente' : (result.message || 'Error al actualizar producto'));
+      if (result.success) {
+        setProductos(productos.map(p => p.id === editProduct.id ? { ...p, ...form } : p));
+        setEditProduct(null);
+        cargarProductos();
+      }
+    } catch {
+      setMensaje('Error de conexión');
     }
   };
 
   // Funciones para activar/desactivar producto
-  const desactivarProducto = async (id) => {
-    const token = localStorage.getItem('token');
-    const res = await fetch(`http://localhost/ProyectoVenta/public/api/productos/Desactivar/${id}`, {
-      method: 'PUT',
-      headers: {
-        'Authorization': `Bearer ${token}`
-      }
-    });
-    const result = await res.json();
-    setMensaje(result.success ? 'Producto desactivado correctamente' : (result.message || 'Error al desactivar producto'));
-    if (result.success) {
-      // Recarga productos desde el backend
-      fetch('http://localhost/ProyectoVenta/public/api/productos')
-        .then(res => res.json())
-        .then(data => setProductos(data));
+  const handleDesactivarProducto = async (id) => {
+    try {
+      const result = await desactivarProducto(id);
+      setMensaje(result.success ? 'Producto desactivado correctamente' : (result.message || 'Error al desactivar producto'));
+      if (result.success) cargarProductos();
+    } catch {
+      setMensaje('Error de conexión');
     }
   };
 
-  const activarProducto = async (id) => {
-    const token = localStorage.getItem('token');
-    const res = await fetch(`http://localhost/ProyectoVenta/public/api/productos/Activar/${id}`, {
-      method: 'PUT', // <--- CAMBIA A PUT
-      headers: {
-        'Authorization': `Bearer ${token}`
-      }
-    });
-    const result = await res.json();
-    setMensaje(result.success ? 'Producto activado correctamente' : (result.message || 'Error al activar producto'));
-    if (result.success) {
-      setProductos(productos.map(p => p.id === id ? { ...p, estado: 1 } : p));
+  const handleActivarProducto = async (id) => {
+    try {
+      const result = await activarProducto(id);
+      setMensaje(result.success ? 'Producto activado correctamente' : (result.message || 'Error al activar producto'));
+      if (result.success) cargarProductos();
+    } catch {
+      setMensaje('Error de conexión');
     }
   };
 
@@ -146,10 +134,9 @@ function EditProducts({ onBack }) {
                   >
                     Editar
                   </button>
-                  {/* Solo muestra uno de los dos botones según el estado */}
                   {esAdmin && producto.estado === 1 && (
                     <button
-                      onClick={() => desactivarProducto(producto.id)}
+                      onClick={() => handleDesactivarProducto(producto.id)}
                       style={{ background: '#ff9800', color: '#fff', border: 'none', borderRadius: 4, padding: '0.3rem 0.8rem', cursor: 'pointer' }}
                     >
                       Desactivar
@@ -157,7 +144,7 @@ function EditProducts({ onBack }) {
                   )}
                   {esAdmin && producto.estado === 0 && (
                     <button
-                      onClick={() => activarProducto(producto.id)}
+                      onClick={() => handleActivarProducto(producto.id)}
                       style={{ background: '#4caf50', color: '#fff', border: 'none', borderRadius: 4, padding: '0.3rem 0.8rem', cursor: 'pointer' }}
                     >
                       Activar

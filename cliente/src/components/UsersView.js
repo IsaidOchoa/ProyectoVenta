@@ -1,14 +1,12 @@
 import React, { useEffect, useState } from 'react';
+import { obtenerUsuarios, cambiarEstadoUsuario } from '../services/UsuarioService';
 
 function UsersView({ onBack }) {
   const [usuarios, setUsuarios] = useState([]);
   const [mensaje, setMensaje] = useState('');
 
-  const API_URL = 'http://localhost/ProyectoVenta/public/api/usuarios';
-
   useEffect(() => {
-    fetch(API_URL)
-      .then(res => res.json())
+    obtenerUsuarios()
       .then(data => setUsuarios(Array.isArray(data) ? data : []))
       .catch(() => setMensaje('Error al cargar usuarios'));
   }, []);
@@ -16,12 +14,7 @@ function UsersView({ onBack }) {
   // Acción para activar/desactivar usuario
   const toggleEstado = async (id, estadoActual) => {
     try {
-      const res = await fetch(`${API_URL}/${id}/estado`, {
-        method: 'PUT',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ estado_usuario: estadoActual ? 0 : 1 })
-      });
-      const data = await res.json();
+      const data = await cambiarEstadoUsuario(id, estadoActual ? 0 : 1);
       if (data.success) {
         setUsuarios(usuarios =>
           usuarios.map(u =>

@@ -1,4 +1,5 @@
 import React, { useState } from 'react';
+import { crearCategoria } from '../services/CategoriasService';
 
 function AddCategory({ onBack }) {
   const [nombre, setNombre] = useState('');
@@ -10,14 +11,13 @@ function AddCategory({ onBack }) {
       setMensaje('El nombre es obligatorio');
       return;
     }
-    const res = await fetch('http://localhost/ProyectoVenta/src/services/CategoriaService.php', {
-      method: 'POST',
-      headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify({ nombre_categoria: nombre })
-    });
-    const result = await res.json();
-    setMensaje(result.success ? 'Categoría agregada correctamente' : (result.message || 'Error al agregar categoría'));
-    if (result.success) setNombre('');
+    try {
+      const result = await crearCategoria(nombre);
+      setMensaje(result.success ? 'Categoría agregada correctamente' : (result.message || 'Error al agregar categoría'));
+      if (result.success) setNombre('');
+    } catch {
+      setMensaje('Error de conexión');
+    }
   };
 
   return (

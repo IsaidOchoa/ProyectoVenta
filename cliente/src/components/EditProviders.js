@@ -1,4 +1,5 @@
 import React, { useEffect, useState } from 'react';
+import { obtenerProveedores, actualizarProveedor } from '../services/ProveedorService';
 
 function EditProviders({ onBack }) {
   const [proveedores, setProveedores] = useState([]);
@@ -7,12 +8,11 @@ function EditProviders({ onBack }) {
   const [mensaje, setMensaje] = useState('');
 
   useEffect(() => {
-    fetch('http://localhost/ProyectoVenta/public/api/proveedores')
-      .then(res => res.json())
-      .then(data => setProveedores(data));
+    obtenerProveedores()
+      .then(data => setProveedores(data))
+      .catch(() => setMensaje('Error al cargar proveedores'));
   }, []);
 
-  // Refactorizado: copia todos los campos del proveedor original
   const startEdit = (prov) => {
     setEditId(prov.id);
     setForm({
@@ -30,18 +30,17 @@ function EditProviders({ onBack }) {
 
   const handleSave = async () => {
     if (!window.confirm('¿Deseas guardar los cambios de este proveedor?')) return;
-    const res = await fetch(`http://localhost/ProyectoVenta/public/api/proveedores/Modificar/${editId}`, {
-      method: 'PUT',
-      headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify(form)
-    });
-    const result = await res.json();
-    if (result.message) {
-      setMensaje(`El proveedor ${form.nombre} ha sido actualizado correctamente`);
-      setProveedores(proveedores.map(p => p.id === editId ? { ...p, ...form } : p));
-      setEditId(null);
-    } else {
-      setMensaje(result.error || 'Error al actualizar');
+    try {
+      const result = await actualizarProveedor(editId, form);
+      if (result.message || result.success) {
+        setMensaje(`El proveedor ${form.nombre} ha sido actualizado correctamente`);
+        setProveedores(proveedores.map(p => p.id === editId ? { ...p, ...form } : p));
+        setEditId(null);
+      } else {
+        setMensaje(result.error || 'Error al actualizar');
+      }
+    } catch (err) {
+      setMensaje('Error de conexión');
     }
   };
 

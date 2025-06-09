@@ -1,4 +1,5 @@
 import React, { useState } from 'react';
+import { crearProveedor } from '../services/ProveedorService';
 
 function AddProvider({ onBack }) {
   const [form, setForm] = useState({ nombre: '', direccion: '', telefono: '' });
@@ -15,14 +16,13 @@ function AddProvider({ onBack }) {
       setMensaje('Todos los campos son obligatorios');
       return;
     }
-    const res = await fetch('http://localhost/ProyectoVenta/public/api/proveedores/agregar', {
-      method: 'POST',
-      headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify(form)
-    });
-    const result = await res.json();
-    setMensaje(result.success ? 'Proveedor agregado correctamente' : (result.message || 'Error al agregar proveedor'));
-    if (result.success) setForm({ nombre: '', direccion: '', telefono: '' });
+    try {
+      const result = await crearProveedor(form);
+      setMensaje(result.success || result.message ? 'Proveedor agregado correctamente' : (result.message || 'Error al agregar proveedor'));
+      if (result.success || result.message) setForm({ nombre: '', direccion: '', telefono: '' });
+    } catch (err) {
+      setMensaje('Error de conexión');
+    }
   };
 
   return (
@@ -39,15 +39,17 @@ function AddProvider({ onBack }) {
         <input
           type="text"
           placeholder="Dirección"
+          name="direccion"
           value={form.direccion}
-          onChange={e => setForm(p => ({ ...p, direccion: e.target.value }))}
+          onChange={handleChange}
           style={{ flex: 1 }}
         />
         <input
           type="text"
           placeholder="Teléfono"
+          name="telefono"
           value={form.telefono}
-          onChange={e => setForm(p => ({ ...p, telefono: e.target.value }))}
+          onChange={handleChange}
           style={{ flex: 1 }}
         />
         <button onClick={handleSubmit} style={{

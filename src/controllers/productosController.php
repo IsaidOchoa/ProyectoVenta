@@ -40,7 +40,7 @@ class ProductosController {
     public static function create() {
         // Verifica que todos los campos requeridos estén presentes
         if (
-            !isset($_POST['nombre'], $_POST['descripcion'], $_POST['precio'], $_POST['stock'], $_POST['categoria'], $_POST['proveedor'])
+            !isset($_POST['nombre'], $_POST['descripcion'], $_POST['precio'], $_POST['stock'], $_POST['categoria_id'], $_POST['proveedor_id'])
             || !isset($_FILES['imagen'])
         ) {
             echo json_encode(["error" => "Faltan campos obligatorios"]);
@@ -71,8 +71,8 @@ class ProductosController {
             $_POST['descripcion'],
             $_POST['precio'],
             $_POST['stock'],
-            $_POST['categoria'],
-            $_POST['proveedor'],
+            $_POST['categoria_id'],
+            $_POST['proveedor_id'],
             $nombreImagen // SOLO el nombre del archivo, sin 'uploads/'
         )) {
             echo json_encode(["message" => "Producto creado exitosamente"]);

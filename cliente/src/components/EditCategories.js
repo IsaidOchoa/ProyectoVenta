@@ -1,4 +1,5 @@
 import React, { useEffect, useState } from 'react';
+import { obtenerCategorias, actualizarCategoria, eliminarCategoria } from '../services/CategoriasService';
 
 function EditCategories({ onBack }) {
   const [categorias, setCategorias] = useState([]);
@@ -7,46 +8,37 @@ function EditCategories({ onBack }) {
   const [mensaje, setMensaje] = useState('');
 
   useEffect(() => {
-    fetch('http://localhost/ProyectoVenta/src/services/CategoriaService.php')
-      .then(res => res.json())
-      .then(data => setCategorias(data));
+    obtenerCategorias().then(setCategorias);
   }, []);
 
   const startEdit = (cat) => {
     setEditId(cat.id);
-    setNombre(cat.nombre);
+    setNombre(cat.nombre_categoria);
     setMensaje('');
   };
 
   const handleSave = async () => {
-    const res = await fetch('http://localhost/ProyectoVenta/src/services/CategoriaService.php', {
-      method: 'POST',
-      headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify({ id: editId, nombre_categoria: nombre, _method: 'PUT' })
-    });
-    const result = await res.json();
-    setMensaje(result.success ? 'Categoría actualizada' : (result.message || 'Error al actualizar'));
-    if (result.success) {
-      setCategorias(categorias.map(c => c.id === editId ? { ...c, nombre } : c));
-      setEditId(null);
+    try {
+      const result = await actualizarCategoria(editId, nombre);
+      setMensaje(result.success ? 'Categoría actualizada' : (result.message || 'Error al actualizar'));
+      if (result.success) {
+        setCategorias(categorias.map(c => c.id === editId ? { ...c, nombre_categoria: nombre } : c));
+        setEditId(null);
+      }
+    } catch {
+      setMensaje('Error de conexión');
     }
   };
 
   const handleDelete = async (cat) => {
-    const res = await fetch('http://localhost/ProyectoVenta/src/services/CategoriaService.php', {
-      method: 'POST',
-      headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify({ id: cat.id, _method: 'DELETE' })
-    });
-    let result = {};
     try {
-      result = await res.json();
+      const result = await eliminarCategoria(cat.id);
+      setMensaje(result.success ? 'Categoría eliminada' : (result.message || 'Error al eliminar'));
+      if (result.success) {
+        setCategorias(categorias.filter(c => c.id !== cat.id));
+      }
     } catch {
-      result = { success: false, message: 'Respuesta vacía del servidor' };
-    }
-    setMensaje(result.success ? 'Categoría eliminada' : (result.message || 'Error al eliminar'));
-    if (result.success) {
-      setCategorias(categorias.filter(c => c.id !== cat.id));
+      setMensaje('Error de conexión');
     }
   };
 
@@ -71,7 +63,17 @@ function EditCategories({ onBack }) {
                 ) : cat.nombre_categoria}
               </td>
               <td>
-                {/* Botones de editar/eliminar */}
+                {editId === cat.id ? (
+                  <>
+                    <button onClick={handleSave} style={{ marginRight: 8, background: '#FFD600', border: 'none', borderRadius: 4, padding: '0.3rem 0.8rem', cursor: 'pointer' }}>Guardar</button>
+                    <button onClick={() => setEditId(null)} style={{ background: '#eee', border: 'none', borderRadius: 4, padding: '0.3rem 0.8rem', cursor: 'pointer' }}>Cancelar</button>
+                  </>
+                ) : (
+                  <>
+                    <button onClick={() => startEdit(cat)} style={{ background: '#0071ce', color: '#fff', border: 'none', borderRadius: 4, padding: '0.3rem 0.8rem', marginRight: 8, cursor: 'pointer' }}>Editar</button>
+                    <button onClick={() => handleDelete(cat)} style={{ background: '#e53935', color: '#fff', border: 'none', borderRadius: 4, padding: '0.3rem 0.8rem', cursor: 'pointer' }}>Eliminar</button>
+                  </>
+                )}
               </td>
             </tr>
           ))}

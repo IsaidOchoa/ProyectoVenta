@@ -1,4 +1,5 @@
 import React, { useState, useEffect } from 'react';
+import { useNavigate, Routes, Route, Navigate, useParams } from 'react-router-dom';
 import NavBar from './components/NavBar';
 import ProductList from './components/ProductList';
 import SearchBar from './components/SearchBar';
@@ -17,31 +18,88 @@ import ProductView from './components/ProductView';
 import Login from './components/Login';
 import RegisterView from './components/RegisterView';
 import UsersView from './components/UsersView';
+import {
+  obtenerProductos,
+  crearProducto,
+  actualizarProducto,
+  eliminarProducto,
+  activarProducto,
+  desactivarProducto
+} from './services/ProductoService';
+import { loginUsuario } from './services/UsuarioService';
+import {
+  obtenerCarrito,
+  agregarAlCarrito,
+  actualizarCantidadCarrito,
+  eliminarDelCarrito,
+  vaciarCarrito
+} from './services/CarritoService';
+import { realizarCompra } from './services/CompraService';
 import './App.css';
+
+// Wrapper para detalle de producto usando useParams
+function ProductDetailWrapper({ productos, onAddToCart, onSelectProduct }) {
+  const navigate = useNavigate();
+  const { id } = useParams();
+  const producto = productos.find(p => p.id === parseInt(id));
+  if (!producto) return <div>Producto no encontrado</div>;
+  return (
+    <ProductView
+      producto={producto}
+      productos={productos}
+      onAddToCart={onAddToCart}
+      onSelectProduct={onSelectProduct}
+      onBack={() => navigate('/')}
+    />
+  );
+}
+
+// HomeView simple (puedes moverlo a views/HomeView.js si prefieres)
+function HomeView({ productos, onAddToCart, onProductClick, isAdmin, busqueda, setBusqueda, handleSearch }) {
+  return (
+    <>
+      <div className="search-actions-container">
+        <SearchBar
+          value={busqueda}
+          onChange={setBusqueda}
+          onSearch={handleSearch}
+          sticky
+        />
+        {isAdmin && (
+          <div className="action-buttons">
+            <button className="btn btn-add" onClick={() => onProductClick('add')}>
+              + Agregar producto
+            </button>
+            <button className="btn btn-edit" onClick={() => onProductClick('edit')}>
+              Editar productos
+            </button>
+          </div>
+        )}
+      </div>
+      <div style={{ display: 'flex', flexWrap: 'wrap', gap: '1rem', justifyContent: 'center' }}>
+        <ProductList
+          productos={productos}
+          onAddToCart={onAddToCart}
+          onProductClick={onProductClick}
+        />
+      </div>
+    </>
+  );
+}
 
 function App() {
   const [productos, setProductos] = useState([]);
   const [busqueda, setBusqueda] = useState('');
   const [productosFiltrados, setProductosFiltrados] = useState([]);
   const [cart, setCart] = useState([]);
-  const [showCart, setShowCart] = useState(false);
-  const [showHistory, setShowHistory] = useState(false);
   const [historial, setHistorial] = useState([]);
-  const [isAdmin, setIsAdmin] = useState(false); // Inicialmente false
-  const [showAddProduct, setShowAddProduct] = useState(false);
-  const [showAddCategory, setShowAddCategory] = useState(false);
-  const [showAddProvider, setShowAddProvider] = useState(false);
-  const [showEditProducts, setShowEditProducts] = useState(false);
-  const [showEditCategories, setShowEditCategories] = useState(false);
-  const [showEditProviders, setShowEditProviders] = useState(false);
-  const [showProvidersView, setShowProvidersView] = useState(false);
-  const [showCategoriesView, setShowCategoriesView] = useState(false);
+  const [isAdmin, setIsAdmin] = useState(false);
   const [toasts, setToasts] = useState([]);
-  const [selectedProduct, setSelectedProduct] = useState(null);
   const [usuario, setUsuario] = useState(null);
   const [showRegister, setShowRegister] = useState(false);
-  const [showUsersView, setShowUsersView] = useState(false);
   const [productoAEditar, setProductoAEditar] = useState(null);
+
+  const navigate = useNavigate();
 
   // Recupera usuario y rol
   useEffect(() => {
@@ -63,42 +121,35 @@ function App() {
     }
   }, [usuario]);
 
+  // Carga productos desde el servicio
   useEffect(() => {
-    fetch('http://localhost/ProyectoVenta/public/api/productos')
-      .then(res => res.json())
+    obtenerProductos()
       .then(data => {
         setProductos(data);
         setProductosFiltrados(data);
+      })
+      .catch(error => {
+        alert(error.message || 'Error al cargar productos');
       });
   }, []);
 
+  // Historial de ejemplo
   useEffect(() => {
-    fetch('http://localhost/ProyectoVenta/public/api/auth/token')
-      .then(res => res.json())
-      .then(data => {
-        if (data.token) {
-          localStorage.setItem('token', data.token);
-        }
-      });
+    setHistorial([
+      { id: 1, nombre: 'Ticket 1', total: 120.50, fecha: '2024-06-01', estado: 'en bodega' },
+      { id: 2, nombre: 'Ticket 2', total: 89.99, fecha: '2024-06-10', estado: 'en camino' },
+      { id: 3, nombre: 'Ticket 3', total: 45.00, fecha: '2024-06-15', estado: 'entregado' }
+    ]);
   }, []);
 
-  useEffect(() => {
-    if (showHistory) {
-      setHistorial([
-        { id: 1, nombre: 'Ticket 1', total: 120.50, fecha: '2024-06-01', estado: 'en bodega' },
-        { id: 2, nombre: 'Ticket 2', total: 89.99, fecha: '2024-06-10', estado: 'en camino' },
-        { id: 3, nombre: 'Ticket 3', total: 45.00, fecha: '2024-06-15', estado: 'entregado' }
-      ]);
-    }
-  }, [showHistory]);
-
-  // Al guardar:
+  // Guarda el carrito en localStorage por usuario
   useEffect(() => {
     if (usuario) {
       localStorage.setItem(`cart_${usuario.id}`, JSON.stringify(cart));
     }
   }, [cart, usuario]);
 
+  // Recupera el carrito de localStorage al iniciar sesión
   useEffect(() => {
     if (usuario) {
       const cartGuardado = localStorage.getItem(`cart_${usuario.id}`);
@@ -108,24 +159,19 @@ function App() {
         setCart([]);
       }
     }
-    // Si no hay usuario, puedes limpiar el carrito si lo deseas:
-    // else {
-    //   setCart([]);
-    // }
   }, [usuario]);
 
+  // Sincroniza el carrito con el backend usando el servicio
   useEffect(() => {
     if (usuario) {
-      fetch(`http://localhost/ProyectoVenta/public/api/carrito/${usuario.id}`)
-        .then(res => res.json())
-        .then(data => setCart(data.productos || []));
+      obtenerCarrito(usuario.id)
+        .then(data => setCart(data.productos || []))
+        .catch(() => setCart([]));
     }
   }, [usuario]);
 
-
-
-  const handleAddToCart = (producto) => {
-    // Siempre usa producto_id para comparar y guardar
+  // --- Handlers del carrito usando el servicio ---
+  const handleAddToCart = async (producto) => {
     const id = producto.producto_id || producto.id;
     let nuevaCantidad = 1;
     setCart(prev => {
@@ -138,37 +184,25 @@ function App() {
             : item
         );
       }
-      // Siempre guarda producto_id
       return [...prev, { ...producto, producto_id: id, cantidad: 1 }];
     });
 
     showToast('Producto agregado al carrito');
-
-    fetch(`http://localhost/ProyectoVenta/public/api/carrito/${usuario.id}`, {
-      method: 'POST',
-      headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify({ producto_id: id, cantidad: 1 })
-    });
+    try {
+      await agregarAlCarrito(usuario.id, id, 1);
+    } catch {}
   };
 
-  const handleRemoveFromCart = (producto) => {
+  const handleRemoveFromCart = async (producto) => {
     const id = producto.producto_id || producto.id;
     setCart(prev => {
       const found = prev.find(item => item.producto_id === id);
       if (!found) return prev;
       const nuevaCantidad = found.cantidad - 1;
       if (nuevaCantidad <= 0) {
-        fetch(`http://localhost/ProyectoVenta/public/api/carrito/${usuario.id}/${id}`, {
-          method: 'DELETE'
-        });
         showToast('Producto eliminado del carrito');
         return prev.filter(item => item.producto_id !== id);
       } else {
-        fetch(`http://localhost/ProyectoVenta/public/api/carrito/${usuario.id}`, {
-          method: 'POST',
-          headers: { 'Content-Type': 'application/json' },
-          body: JSON.stringify({ producto_id: id, cantidad: nuevaCantidad })
-        });
         showToast('Cantidad actualizada en el carrito');
         return prev.map(item =>
           item.producto_id === id
@@ -177,25 +211,68 @@ function App() {
         );
       }
     });
+
+    try {
+      const found = cart.find(item => (item.producto_id || item.id) === id);
+      const nuevaCantidad = found ? found.cantidad - 1 : 0;
+      if (nuevaCantidad <= 0) {
+        await eliminarDelCarrito(usuario.id, id);
+      } else {
+        await actualizarCantidadCarrito(usuario.id, id, nuevaCantidad);
+      }
+    } catch {}
   };
 
-  const handleDeleteFromCart = (producto) => {
+  const handleDeleteFromCart = async (producto) => {
     const id = producto.producto_id || producto.id;
     setCart(prev => prev.filter(item => item.producto_id !== id));
-    fetch(`http://localhost/ProyectoVenta/public/api/carrito/${usuario.id}/${id}`, {
-      method: 'DELETE'
-    });
-    showToast('Producto eliminado del carrito');
+    try {
+      await eliminarDelCarrito(usuario.id, id);
+      showToast('Producto eliminado del carrito');
+    } catch {}
   };
 
-  const handleClearCart = () => {
+  const handleClearCart = async () => {
     if (window.confirm('¿Estás seguro de que deseas vaciar todo el carrito?')) {
       setCart([]);
-      fetch(`http://localhost/ProyectoVenta/public/api/carrito/${usuario.id}`, {
-        method: 'DELETE'
-      });
-      showToast('Carrito vaciado');
+      try {
+        await vaciarCarrito(usuario.id);
+        showToast('Carrito vaciado');
+      } catch {}
     }
+  };
+
+  // --- Handler de pago (puedes crear un servicio para compras si lo deseas) ---
+  const handlePay = async () => {
+    if (cart.length === 0) {
+      alert('No hay productos en el carrito');
+      return;
+    }
+    try {
+      const data = await realizarCompra(
+        cart.map(item => ({
+          id: item.producto_id || item.id,
+          cantidad: item.cantidad
+        }))
+      );
+      if (data.success) {
+        showToast('¡Stock actualizado!');
+        setCart([]);
+      } else {
+        alert(data.error || 'Error inesperado en el servidor uno');
+      }
+    } catch (error) {
+      alert(error.message || 'Error inesperado en el servidor dos');
+    }
+  };
+
+  // --- Utilidades y renderizado ---
+  const showToast = (mensaje) => {
+    const id = Date.now() + Math.random();
+    setToasts(prev => [...prev, { id, mensaje, visible: true }]);
+    setTimeout(() => {
+      setToasts(prev => prev.filter(t => t.id !== id));
+    }, 3000);
   };
 
   const handleSearch = (texto = busqueda) => {
@@ -208,309 +285,168 @@ function App() {
     setProductosFiltrados(filtro);
   };
 
-  // Al mostrar el carrito, oculta la selección de productos
-  const handleCartClick = () => {
-    setShowCart(true);
-    setSelectedProduct(null); // Oculta la vista de producto individual
-    setShowHistory(false);
-    setShowAddProduct(false);
-    setShowAddCategory(false);
-    setShowAddProvider(false);
-    setShowEditProducts(false);
-    setShowEditCategories(false);
-    setShowEditProviders(false);
-    setShowProvidersView(false);
-    setShowCategoriesView(false);
-  };
-
-  const handleBackToShop = () => setShowCart(false);
-
-  const handleHistoryClick = () => {
-    setShowHistory(true);
-    setShowCart(false);
-    setShowAddProduct(false);
-    setShowAddCategory(false);
-    setShowAddProvider(false);
-    setShowEditProducts(false);
-    setShowEditCategories(false);
-    setShowEditProviders(false);
-    setShowProvidersView(false);
-    setShowCategoriesView(false);
-    setShowUsersView(false);
-  };
-
-  const handleLogout = () => {
-    setUsuario(null);
-    setShowRegister(false);
-  };
-
-  const handlePay = async () => {
-    if (cart.length === 0) {
-      alert('No hay productos en el carrito');
-      return;
-    }
-
-    try {
-      const response = await fetch('http://localhost/ProyectoVenta/public/api/compras/realizar', {
-        method: 'POST',
-        headers: {
-          'Content-Type': 'application/json'
-          // No envíes Authorization ni usuario_id para esta prueba simple
-        },
-        body: JSON.stringify({
-          productos: cart.map(item => ({
-            id: item.producto_id || item.id, // Usa 'id'
-            cantidad: item.cantidad
-          }))
-        })
-      });
-
-      const data = await response.json();
-      if (data.success) {
-        showToast('¡Stock actualizado!');
-        setCart([]);
-      } else {
-        alert(data.error || 'Error inesperado en el servidor uno');
-      }
-    } catch (error) {
-      alert('Error inesperado en el servidor dos');
-    }
-  };
-
-  const handleShowProviders = () => {
-    setShowProvidersView(true);
-    setShowCategoriesView(false);
-    setShowCart(false);
-    setShowHistory(false);
-    setShowAddProduct(false);
-    setShowAddCategory(false);
-    setShowAddProvider(false);
-    setShowEditProducts(false);
-    setShowEditCategories(false);
-    setShowEditProviders(false);
-    setShowUsersView(false);
-  };
-
-  const handleShowCategories = () => {
-    setShowCategoriesView(true);
-    setShowProvidersView(false);
-    setShowCart(false);
-    setShowHistory(false);
-    setShowAddProduct(false);
-    setShowAddCategory(false);
-    setShowAddProvider(false);
-    setShowEditProducts(false);
-    setShowEditCategories(false);
-    setShowEditProviders(false);
-    setShowUsersView(false);
-  };
-
-  const handleShowUsers = () => {
-    setShowUsersView(true);
-    setShowProvidersView(false);
-    setShowCategoriesView(false);
-    setShowCart(false);
-    setShowHistory(false);
-    setShowAddProduct(false);
-    setShowAddCategory(false);
-    setShowAddProvider(false);
-    setShowEditProducts(false);
-    setShowEditCategories(false);
-    setShowEditProviders(false);
-    setSelectedProduct(null);
-  };
-
-  const handleBackToHome = () => {
-    setSelectedProduct(null);
-    setShowHistory(false);
-    setShowCart(false);
-    setShowAddProduct(false);
-    setShowAddCategory(false);
-    setShowAddProvider(false);
-    setShowEditProducts(false);
-    setShowEditCategories(false);
-    setShowEditProviders(false);
-    setShowProvidersView(false);
-    setShowCategoriesView(false);
-    setShowUsersView(false);
-    setProductoAEditar(null); // <-- Limpia el producto a editar al volver
-  };
-
-  const handleProductClick = (producto) => {
-    setSelectedProduct(producto);
-    setShowCart(false);
-    setShowHistory(false);
-    setShowAddProduct(false);
-    setShowAddCategory(false);
-    setShowAddProvider(false);
-    setShowEditProducts(false);
-    setShowEditCategories(false);
-    setShowEditProviders(false);
-    setShowProvidersView(false);
-    setShowCategoriesView(false);
-  };
-
-  const showToast = (mensaje) => {
-    const id = Date.now() + Math.random();
-    setToasts(prev => [...prev, { id, mensaje, visible: true }]);
-    setTimeout(() => {
-      setToasts(prev => prev.filter(t => t.id !== id));
-    }, 3000);
-  };
-
-  // Filtrado de productos según el rol
-  const productosVisibles = isAdmin
-    ? productos // Admin ve todos
-    : productos.filter(p => p.estado === 1); // Cliente solo ve activos
-
-  // Cambia la lógica de renderizado para login/registro:
+  // --- Login y registro usando rutas ---
   if (!usuario) {
-    if (showRegister) {
-      return (
-        <RegisterView
-          onShowLogin={() => setShowRegister(false)}
-        />
-      );
-    }
+    
     return (
-      <Login
-        onLogin={async ({ correo, contrasena }) => {
-          try {
-            const response = await fetch('http://localhost/ProyectoVenta/public/api/usuarios/login', {
-              method: 'POST',
-              headers: { 'Content-Type': 'application/json' },
-              body: JSON.stringify({ correo, contrasena })
-            });
-            const data = await response.json();
-            if (data.success) {
-              setUsuario(data.usuario);
-              localStorage.setItem('usuario', JSON.stringify(data.usuario));
-              localStorage.setItem('token', data.token);
-              setIsAdmin(data.usuario.rol === 'admin');
-            } else {
-              alert(data.message || 'Credenciales incorrectas');
-            }
-          } catch (error) {
-            alert('Error al conectar con el servidor');
+      <Routes>
+        <Route
+          path="/register"
+          element={<RegisterView onShowLogin={() => navigate('/login')} />}
+        />
+        <Route
+          path="*"
+          element={
+            <Login
+              onLogin={async ({ correo, contrasena }) => {
+                try {
+                  const data = await loginUsuario({ correo, contrasena });
+                  if (data.success) {
+                    setUsuario(data.usuario);
+                    localStorage.setItem('usuario', JSON.stringify(data.usuario));
+                    localStorage.setItem('token', data.token);
+                    setIsAdmin(data.usuario.rol === 'admin');
+                    navigate('/');
+                  } else {
+                    alert(data.message || 'Credenciales incorrectas');
+                  }
+                } catch (error) {
+                  alert('Error al conectar con el servidor');
+                }
+              }}
+              onShowRegister={() => navigate('/register')}
+            />
           }
-        }}
-        onShowRegister={() => setShowRegister(true)}
-      />
+        />
+      </Routes>
     );
   }
 
+  // --- Renderizado principal con rutas ---
+  const productosVisibles = isAdmin
+    ? productos
+    : productos.filter(p => p.estado === 1);
+
   return (
-    <div>
+    <>
       <NavBar
         cartCount={cart.reduce((sum, item) => sum + item.cantidad, 0)}
-        onCartClick={handleCartClick}
-        onHistoryClick={handleHistoryClick}
-        onLogout={handleLogout}
-        onAddProduct={() => { setShowAddProduct(true); setShowAddCategory(false); setShowAddProvider(false); setShowCart(false); setShowHistory(false); }}
-        onAddCategory={() => { setShowAddCategory(true); setShowAddProduct(false); setShowAddProvider(false); setShowCart(false); setShowHistory(false); }}
-        onAddProvider={() => { setShowAddProvider(true); setShowAddProduct(false); setShowAddCategory(false); setShowCart(false); setShowHistory(false); }}
-        onShowProviders={handleShowProviders}
-        onShowCategories={handleShowCategories}
-        onShowUsers={handleShowUsers}
+        onCartClick={() => navigate('/carrito')}
+        onHistoryClick={() => navigate('/historial')}
+        onLogout={() => { setUsuario(null); setShowRegister(false); navigate('/login'); }}
+        onAddProduct={() => navigate('/agregar-producto')}
+        onAddCategory={() => navigate('/agregar-categoria')}
+        onAddProvider={() => navigate('/agregar-proveedor')}
+        onShowProviders={() => navigate('/proveedores')}
+        onShowCategories={() => navigate('/categorias')}
+        onShowUsers={() => navigate('/usuarios')}
         isAdmin={isAdmin}
         usuario={usuario}
       />
-      {showUsersView ? (
-        <UsersView onBack={handleBackToHome} />
-      ) : (
-        <>
-          {showAddProduct && isAdmin && (
+      <Routes>
+        <Route path="/" element={
+          <HomeView
+            productos={productosFiltrados.length > 0 || busqueda ? productosFiltrados : productosVisibles}
+            onAddToCart={handleAddToCart}
+            onProductClick={producto => {
+              if (producto === 'add') navigate('/agregar-producto');
+              else if (producto === 'edit') navigate('/editar-productos');
+              else navigate(`/producto/${producto.id}`);
+            }}
+            isAdmin={isAdmin}
+            busqueda={busqueda}
+            setBusqueda={setBusqueda}
+            handleSearch={handleSearch}
+          />
+        } />
+        <Route path="/carrito" element={
+          <CartView
+            cart={cart}
+            onAdd={handleAddToCart}
+            onRemove={handleRemoveFromCart}
+            onDelete={handleDeleteFromCart}
+            onClearCart={handleClearCart}
+            onPay={handlePay}
+            onBack={() => navigate('/')}
+          />
+        } />
+        <Route path="/producto/:id" element={
+          <ProductDetailWrapper
+            productos={productos}
+            onAddToCart={handleAddToCart}
+            onSelectProduct={producto => navigate(`/producto/${producto.id}`)}
+          />
+        } />
+        <Route path="/historial" element={
+          <PurchaseHistory historial={historial} onBack={() => navigate('/')} />
+        } />
+        <Route path="/agregar-producto" element={
+          isAdmin ? (
             <AddProduct
-              onBack={handleBackToHome}
+              onBack={() => navigate('/')}
               initialData={productoAEditar || {}}
               editMode={!!productoAEditar}
-              onProductUpdated={productoActualizado => {
-                setProductos(prev =>
-                  prev.map(p => p.id === productoActualizado.id ? productoActualizado : p)
-                );
-                setProductosFiltrados(prev =>
-                  prev.map(p => p.id === productoActualizado.id ? productoActualizado : p)
-                );
+              onProductUpdated={async productoActualizado => {
+                try {
+                  if (productoActualizado.id) {
+                    await actualizarProducto(productoActualizado.id, productoActualizado.formData);
+                  } else {
+                    await crearProducto(productoActualizado.formData);
+                  }
+                  const nuevosProductos = await obtenerProductos();
+                  setProductos(nuevosProductos);
+                  setProductosFiltrados(nuevosProductos);
+                  showToast('Producto guardado correctamente');
+                  navigate('/');
+                } catch (error) {
+                  alert(error.message || 'Error al guardar producto');
+                }
               }}
             />
-          )}
-          {showAddCategory && isAdmin && <AddCategory onBack={handleBackToHome} />}
-          {showAddProvider && isAdmin && <AddProvider onBack={handleBackToHome} />}
-          {showEditProducts && isAdmin && <EditProducts onBack={handleBackToHome} />}
-          {showEditCategories && isAdmin && <EditCategories onBack={handleBackToHome} />}
-          {showEditProviders && isAdmin && <EditProviders onBack={handleBackToHome} />}
-          {showProvidersView && isAdmin && <ProvidersView onBack={handleBackToHome} />}
-          {showCategoriesView && isAdmin && <CategoriesView onBack={handleBackToHome} />}
-          {showHistory && <PurchaseHistory historial={historial} onBack={handleBackToHome} />}
-          {showCart && (
-            <CartView
-              cart={cart}
-              onAdd={handleAddToCart}
-              onRemove={handleRemoveFromCart}
-              onDelete={handleDeleteFromCart}
-              onClearCart={handleClearCart}
-              onPay={handlePay} // <--- aquí
-              onBack={handleBackToHome}
-            />
-          )}
-          {!showCart && (
-            <div style={{
-              position: 'fixed',
-              bottom: 30,
-              right: 30,
-              display: 'flex',
-              flexDirection: 'column',
-              alignItems: 'flex-end',
-              gap: 10,
-              zIndex: 9999
-            }}>
-              {toasts.map(toast => (
-                <Toast key={toast.id} mensaje={toast.mensaje} visible={toast.visible} />
-              ))}
-            </div>
-          )}
-          {selectedProduct ? (
-            <ProductView
-              producto={selectedProduct}
-              productos={productos}
-              onAddToCart={handleAddToCart}
-              onSelectProduct={handleProductClick}
-              onBack={handleBackToHome}
-            />
-          ) : (
-            !showCart && !showHistory && !showAddProduct && !showAddCategory && !showAddProvider && !showEditProducts && !showEditCategories && !showEditProviders && !showProvidersView && !showCategoriesView && (
-              <>
-                <div className="search-actions-container">
-                  <SearchBar
-                    value={busqueda}
-                    onChange={setBusqueda}
-                    onSearch={handleSearch}
-                    sticky
-                  />
-                  {isAdmin && (
-                    <div className="action-buttons">
-                      <button className="btn btn-add" onClick={() => setShowAddProduct(true)}>
-                        + Agregar producto
-                      </button>
-                      <button className="btn btn-edit" onClick={() => setShowEditProducts(true)}>
-                        Editar productos
-                      </button>
-                    </div>
-                  )}
-                </div>
-                <div style={{ display: 'flex', flexWrap: 'wrap', gap: '1rem', justifyContent: 'center' }}>
-                  <ProductList
-                    productos={productosFiltrados.length > 0 || busqueda ? productosFiltrados : productosVisibles}
-                    onAddToCart={handleAddToCart}
-                    onProductClick={handleProductClick}
-                  />
-                </div>
-              </>
-            )
-          )}
-        </>
-      )}
-    </div>
+          ) : <Navigate to="/" />
+        } />
+        <Route path="/agregar-categoria" element={
+          isAdmin ? <AddCategory onBack={() => navigate('/')} /> : <Navigate to="/" />
+        } />
+        <Route path="/agregar-proveedor" element={
+          isAdmin ? <AddProvider onBack={() => navigate('/')} /> : <Navigate to="/" />
+        } />
+        <Route path="/editar-productos" element={
+          isAdmin ? <EditProducts onBack={() => navigate('/')} /> : <Navigate to="/" />
+        } />
+        <Route path="/editar-categorias" element={
+          isAdmin ? <EditCategories onBack={() => navigate('/')} /> : <Navigate to="/" />
+        } />
+        <Route path="/editar-proveedores" element={
+          isAdmin ? <EditProviders onBack={() => navigate('/')} /> : <Navigate to="/" />
+        } />
+        <Route path="/proveedores" element={
+          isAdmin ? <ProvidersView onBack={() => navigate('/')} /> : <Navigate to="/" />
+        } />
+        <Route path="/categorias" element={
+          isAdmin ? <CategoriesView onBack={() => navigate('/')} /> : <Navigate to="/" />
+        } />
+        <Route path="/usuarios" element={
+          isAdmin ? <UsersView onBack={() => navigate('/')} /> : <Navigate to="/" />
+        } />
+        <Route path="*" element={<Navigate to="/" />} />
+      </Routes>
+      {/* Toasts */}
+      <div style={{
+        position: 'fixed',
+        bottom: 30,
+        right: 30,
+        display: 'flex',
+        flexDirection: 'column',
+        alignItems: 'flex-end',
+        gap: 10,
+        zIndex: 9999
+      }}>
+        {toasts.map(toast => (
+          <Toast key={toast.id} mensaje={toast.mensaje} visible={toast.visible} />
+        ))}
+      </div>
+    </>
   );
 }
 

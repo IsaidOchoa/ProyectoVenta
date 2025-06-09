@@ -13,9 +13,9 @@ if ($_SERVER['REQUEST_METHOD'] === 'OPTIONS') {
 
 require_once __DIR__ . '/../controllers/productosController.php';
 require_once __DIR__ . '/../../vendor/autoload.php';
-require_once __DIR__ . '/../../middleware/AuthMiddleware.php';
-require_once __DIR__ . '/../../middleware/Cors.php';
-require_once __DIR__ . '/../../middleware/LoggingMiddleware.php';
+//require_once __DIR__ . '/../../middleware/AuthMiddleware.php';
+//require_once __DIR__ . '/../../middleware/Cors.php';
+//require_once __DIR__ . '/../../middleware/LoggingMiddleware.php';
 
 use Firebase\JWT\JWT;
 use Firebase\JWT\Key;
@@ -32,17 +32,17 @@ if (strpos($request_uri, $basePath) === 0) {
 }
 
 // Aplica middlewares globales
-Cors::permitirOrigen();
-LoggingMiddleware::registrarSolicitud();
+//Cors::permitirOrigen();
+//LoggingMiddleware::registrarSolicitud();
 
 // Procesar solo rutas que comiencen con /api/productos
 if (strpos($request_uri, '/api/productos') === 0) {
     // Rutas de productos
     if ($request_method === "POST" && $request_uri === '/api/productos/Crear') {
-        AuthMiddleware::verificarToken(); // Ejemplo: solo usuarios autenticados pueden crear
+        //AuthMiddleware::verificarToken(); // Ejemplo: solo usuarios autenticados pueden crear
         ProductosController::create();
     } elseif ($request_method === "DELETE" && preg_match('/\/api\/productos\/Eliminar\/(\d+)/', $request_uri, $matches)) {
-        AuthMiddleware::verificarToken();
+        //AuthMiddleware::verificarToken();
         $id = filter_var($matches[1], FILTER_VALIDATE_INT);
         if (!$id) {
             header("HTTP/1.1 400 Bad Request");
@@ -51,7 +51,7 @@ if (strpos($request_uri, '/api/productos') === 0) {
         }
         ProductosController::delete($id);
     } elseif ($request_method === "PUT" && preg_match('/\/api\/productos\/Modificar\/(\d+)/', $request_uri, $matches)) {
-        AuthMiddleware::verificarToken();
+        //AuthMiddleware::verificarToken();
         $id = filter_var($matches[1], FILTER_VALIDATE_INT);
         if (!$id) {
             header("HTTP/1.1 400 Bad Request");
@@ -60,7 +60,7 @@ if (strpos($request_uri, '/api/productos') === 0) {
         }
         ProductosController::update($id);
     } elseif ($request_method === "POST" && preg_match('/\/api\/productos\/Modificar\/(\d+)/', $request_uri, $matches)) {
-        AuthMiddleware::verificarToken();
+        //AuthMiddleware::verificarToken();
         $id = filter_var($matches[1], FILTER_VALIDATE_INT);
         if (!$id) {
             header("HTTP/1.1 400 Bad Request");
@@ -69,7 +69,7 @@ if (strpos($request_uri, '/api/productos') === 0) {
         }
         ProductosController::update($id);
     } elseif ($request_method === "PUT" && preg_match('/\/api\/productos\/Desactivar\/(\d+)/', $request_uri, $matches)) {
-        AuthMiddleware::verificarToken();
+        //AuthMiddleware::verificarToken();
         $id = filter_var($matches[1], FILTER_VALIDATE_INT);
         if (!$id) {
             header("HTTP/1.1 400 Bad Request");
@@ -78,7 +78,7 @@ if (strpos($request_uri, '/api/productos') === 0) {
         }
         ProductosController::desactivar($id);
     } elseif ($request_method === "PUT" && preg_match('/\/api\/productos\/Activar\/(\d+)/', $request_uri, $matches)) {
-        AuthMiddleware::verificarToken();
+        //AuthMiddleware::verificarToken();
         $id = filter_var($matches[1], FILTER_VALIDATE_INT);
         if (!$id) {
             header("HTTP/1.1 400 Bad Request");

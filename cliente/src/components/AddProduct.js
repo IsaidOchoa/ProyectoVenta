@@ -1,4 +1,5 @@
 import React, { useState, useEffect } from 'react';
+import { crearProducto, obtenerCategorias, obtenerProveedores } from '../services/ProductoService';
 
 function AddProduct({ onBack, initialData = {}, onSubmit, editMode = false, onCancel, onProductUpdated }) {
   const [form, setForm] = useState({
@@ -29,12 +30,8 @@ function AddProduct({ onBack, initialData = {}, onSubmit, editMode = false, onCa
   }, [initialData]);
 
   useEffect(() => {
-    fetch('http://localhost/ProyectoVenta/public/api/categorias')
-      .then(res => res.json())
-      .then(data => setCategorias(Array.isArray(data) ? data : []));
-    fetch('http://localhost/ProyectoVenta/public/api/proveedores')
-      .then(res => res.json())
-      .then(data => setProveedores(Array.isArray(data) ? data : []));
+    obtenerCategorias().then(data => setCategorias(Array.isArray(data) ? data : []));
+    obtenerProveedores().then(data => setProveedores(Array.isArray(data) ? data : []));
   }, []);
 
   const handleChange = e => {
@@ -59,7 +56,6 @@ function AddProduct({ onBack, initialData = {}, onSubmit, editMode = false, onCa
 
   const handleSubmit = async e => {
     e.preventDefault();
-    // Permite valores numéricos o strings no vacíos
     if (
       !form.nombre ||
       !form.precio ||
@@ -80,43 +76,28 @@ function AddProduct({ onBack, initialData = {}, onSubmit, editMode = false, onCa
     formData.append('descripcion', form.descripcion);
     formData.append('precio', form.precio);
     formData.append('stock', form.stock);
-    formData.append('categoria_id', form.categoria); // usa categoria_id
-    formData.append('proveedor_id', form.proveedor); // usa proveedor_id
+    formData.append('categoria_id', form.categoria);
+    formData.append('proveedor_id', form.proveedor);
     if (form.imagen) formData.append('imagen', form.imagen);
 
-    const url = editMode
-      ? `http://localhost/ProyectoVenta/public/api/productos/Modificar/${initialData.id}`
-      : 'http://localhost/ProyectoVenta/public/api/productos/Crear';
-
-    const method = editMode ? 'POST' : 'POST'; // según tu rutas
-
-    const res = await fetch(url, {
-      method,
-      body: formData,
-      headers: {
-        Authorization: `Bearer ${localStorage.getItem('token')}`
+    try {
+      let data;
+      if (editMode && onSubmit) {
+        await onSubmit(form, setMensaje, setForm);
+        return;
+      } else {
+        data = await crearProducto(formData);
       }
-    });
-
-    const data = await res.json();
-    if (data.message && editMode && typeof onProductUpdated === 'function') {
-      // Vuelve a pedir el producto actualizado (puedes ajustar la URL según tu API)
-      fetch(`http://localhost/ProyectoVenta/public/api/productos/${initialData.id}`)
-        .then(res => res.json())
-        .then(productoActualizado => {
-          onProductUpdated(productoActualizado);
-          setMensaje(data.message);
-          setTimeout(() => {
-            if (typeof onBack === 'function') onBack();
-          }, 1000);
-        });
-    } else if (data.message) {
-      setMensaje(data.message);
-      setTimeout(() => {
-        if (typeof onBack === 'function') onBack();
-      }, 1000);
-    } else {
-      setMensaje(data.error || 'Error inesperado');
+      if (data.message) {
+        setMensaje(data.message);
+        setTimeout(() => {
+          if (typeof onBack === 'function') onBack();
+        }, 1000);
+      } else {
+        setMensaje(data.error || 'Error inesperado');
+      }
+    } catch {
+      setMensaje('Error de conexión');
     }
   };
 
