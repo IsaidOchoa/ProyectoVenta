@@ -2,10 +2,14 @@ import React from 'react';
 import ProductCard from './ProductCard';
 
 function ProductList({ productos, onAddToCart, onProductClick, isAdmin }) {
-  // productos ya debe venir de obtenerProductos() del servicio
+  // Filtra productos: solo admin ve desactivados
+  const productosFiltrados = isAdmin
+    ? productos
+    : productos.filter(producto => producto.estado === 1);
+
   return (
     <div className="products-container">
-      {productos.map(producto => (
+      {productosFiltrados.map(producto => (
         <ProductCard
           key={producto.id}
           producto={producto}

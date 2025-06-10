@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import { FaArrowLeft, FaTrash } from 'react-icons/fa';
 import PurchaseTicket from './PurchaseTicket';
 import Modal from './Modal';
@@ -42,6 +42,16 @@ function PurchaseHistory({ historial: historialProp, usuario_id, onBack, onDelet
       showToast('Error al eliminar historial');
     }
   };
+
+  useEffect(() => {
+    async function cargarHistorial() {
+      if (usuario_id) {
+        const historialReal = await obtenerHistorial(usuario_id);
+        setHistorial(historialReal);
+      }
+    }
+    cargarHistorial();
+  }, [usuario_id]);
 
   return (
     <div style={{ padding: '2rem', background: '#fafbfc', minHeight: '100vh' }}>

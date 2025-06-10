@@ -122,8 +122,10 @@ function ProductView({ producto, onAddToCart, onSelectProduct, onBack }) {
               ${producto.precio}
             </div>
           </div>
-          <div style={{ color: '#2ecc40', fontWeight: 'bold', fontSize: 16, marginBottom: 24 }}>
-            Stock disponible: {producto.stock}
+          <div style={{ color: producto.stock === 0 ? '#e53935' : '#2ecc40', fontWeight: 'bold', fontSize: 16, marginBottom: 24 }}>
+            {producto.stock === 0
+              ? 'Sin stock'
+              : `Stock disponible: ${producto.stock}`}
           </div>
         </div>
         {/* Botón agregar y similares */}
@@ -136,6 +138,7 @@ function ProductView({ producto, onAddToCart, onSelectProduct, onBack }) {
         }}>
           <button
             onClick={() => onAddToCart(producto)}
+            disabled={producto.stock === 0 || producto.estado !== 1}
             style={{
               background: '#0071ce',
               color: '#fff',
@@ -144,12 +147,23 @@ function ProductView({ producto, onAddToCart, onSelectProduct, onBack }) {
               padding: '1rem 2.5rem',
               fontWeight: 'bold',
               fontSize: 18,
-              cursor: 'pointer',
-              marginBottom: 32
+              cursor: (producto.stock === 0 || producto.estado !== 1) ? 'not-allowed' : 'pointer',
+              marginBottom: 16
             }}
           >
             Agregar al carrito
           </button>
+          {producto.estado !== 1 && (
+            <div style={{
+              color: '#e53935',
+              fontWeight: 'bold',
+              fontSize: 15,
+              marginBottom: 16,
+              textAlign: 'center'
+            }}>
+              No se puede agregar porque el producto no está disponible
+            </div>
+          )}
           <div style={{ width: '100%' }}>
             <h3 style={{ fontSize: 20, marginBottom: 12 }}>Productos similares</h3>
             <div style={{ display: 'flex', gap: 16 }}>

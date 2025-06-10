@@ -34,7 +34,8 @@ function ProductCard({ producto, onAddToCart, enCarrito, onProductClick, isAdmin
           borderTopLeftRadius: 10,
           borderTopRightRadius: 10,
           minHeight: 150,
-          filter: isDesactivado ? 'grayscale(60%)' : 'none'
+          filter: isDesactivado || producto.stock === 0 ? 'grayscale(60%)' : 'none',
+          position: 'relative'
         }}
       >
         <img
@@ -44,25 +45,9 @@ function ProductCard({ producto, onAddToCart, enCarrito, onProductClick, isAdmin
             maxHeight: 120,
             maxWidth: '90%',
             objectFit: 'contain',
-            opacity: isDesactivado ? 0.7 : 1
+            opacity: isDesactivado || producto.stock === 0 ? 0.7 : 1
           }}
         />
-        {producto.stock === 0 && (
-          <div
-            style={{
-              position: 'absolute',
-              top: 10,
-              left: 10,
-              color: 'red',
-              fontWeight: 'bold',
-              background: 'rgba(255,255,255,0.8)',
-              padding: '2px 8px',
-              borderRadius: 4
-            }}
-          >
-            Sin stock
-          </div>
-        )}
         {isDesactivado && (
           <div
             style={{
@@ -79,6 +64,24 @@ function ProductCard({ producto, onAddToCart, enCarrito, onProductClick, isAdmin
             }}
           >
             Producto no disponible
+          </div>
+        )}
+        {producto.stock === 0 && (
+          <div
+            style={{
+              position: 'absolute',
+              top: isDesactivado ? 38 : 10, // debajo del mensaje anterior si está desactivado
+              right: 10,
+              color: '#fff',
+              background: 'rgba(200,0,0,0.7)',
+              fontWeight: 'bold',
+              padding: '2px 10px',
+              borderRadius: 4,
+              fontSize: 13,
+              zIndex: 2
+            }}
+          >
+            Sin stock
           </div>
         )}
       </div>
@@ -147,27 +150,6 @@ function ProductCard({ producto, onAddToCart, enCarrito, onProductClick, isAdmin
           Agregar al carrito
         </button>
       </div>
-      {/* Mensaje adicional para administradores */}
-      {producto.estado !== 1 && isAdmin && (
-        <div
-          className="no-disponible"
-          style={{
-            position: 'absolute',
-            bottom: 10,
-            left: 10,
-            right: 10,
-            background: 'rgba(255,0,0,0.7)',
-            color: '#fff',
-            padding: '4px 8px',
-            borderRadius: 4,
-            textAlign: 'center',
-            fontWeight: 'bold',
-            fontSize: 14
-          }}
-        >
-          Producto no disponible
-        </div>
-      )}
     </div>
   );
 }

@@ -340,3 +340,9 @@ th:last-child, td:last-child {
   display: inline-block;
   vertical-align: middle;
 }
+
+tr:hover {
+  background: #f0f6ff !important;
+  transition: background 0.2s;
+  cursor: pointer;
+}

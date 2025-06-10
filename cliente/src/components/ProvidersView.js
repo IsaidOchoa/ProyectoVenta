@@ -1,4 +1,4 @@
-import React, { useEffect, useState } from 'react';
+import React, { useEffect, useState, useRef } from 'react';
 import SearchBar from './SearchBar';
 import {
   obtenerProveedores,
@@ -9,17 +9,30 @@ import {
 
 function ProvidersView({ onBack }) {
   const [proveedores, setProveedores] = useState([]);
+  const [selectedRow, setSelectedRow] = useState(null);
   const [editId, setEditId] = useState(null);
   const [editForm, setEditForm] = useState({ nombre: '', direccion: '', telefono: '' });
   const [mensaje, setMensaje] = useState('');
   const [nuevoProveedor, setNuevoProveedor] = useState({ nombre: '', direccion: '', telefono: '' });
   const [agregando, setAgregando] = useState(false);
   const [busqueda, setBusqueda] = useState('');
+  const tableRef = useRef(null);
 
   useEffect(() => {
     obtenerProveedores()
       .then(data => setProveedores(Array.isArray(data) ? data : []))
       .catch(() => setMensaje('Error al cargar proveedores'));
+  }, []);
+
+  // Deseleccionar fila al hacer clic fuera de la tabla
+  useEffect(() => {
+    function handleClickOutside(event) {
+      if (tableRef.current && !tableRef.current.contains(event.target)) {
+        setSelectedRow(null);
+      }
+    }
+    document.addEventListener('mousedown', handleClickOutside);
+    return () => document.removeEventListener('mousedown', handleClickOutside);
   }, []);
 
   const handleEdit = (prov) => {
@@ -97,7 +110,7 @@ function ProvidersView({ onBack }) {
   );
 
   return (
-    <div style={{ maxWidth: 900, margin: '2rem auto', background: '#fff', borderRadius: 10, boxShadow: '0 2px 8px rgba(0,0,0,0.08)', padding: '2rem' }}>
+    <div style={{ maxWidth: 1000, margin: '2rem auto', background: '#fff', borderRadius: 10, boxShadow: '0 2px 8px rgba(0,0,0,0.08)', padding: '2rem' }}>
       <button
         onClick={onBack}
         style={{
@@ -166,87 +179,114 @@ function ProvidersView({ onBack }) {
         </button>
       </form>
       {mensaje && <div style={{ marginBottom: 16, color: mensaje.includes('eliminado') || mensaje.includes('actualizado') || mensaje.includes('agregado') ? 'green' : 'red' }}>{mensaje}</div>}
-      <table style={{ width: '100%', borderCollapse: 'collapse' }}>
-        <thead>
-          <tr style={{ background: '#f4f4f4' }}>
-            <th style={{ width: 40, textAlign: 'center' }}>ID</th>
-            <th style={{ width: 150, textAlign: 'center', paddingLeft: 16 }}>Nombre</th>
-            <th style={{ width: 300, textAlign: 'left' }}>Dirección</th>
-            <th style={{ width: 40, textAlign: 'center' }}>Teléfono</th>
-            <th style={{ textAlign: 'center' }}>Acción</th>
-          </tr>
-        </thead>
-        <tbody>
-          {proveedoresFiltrados.map(prov => (
-            <tr key={prov.id}>
-              <td style={{ width: 80, textAlign: 'center' }}>{prov.id}</td>
-              <td style={{ textAlign: 'center', paddingLeft: 16 }}>
-                {editId === prov.id ? (
-                  <input
-                    name="nombre"
-                    value={editForm.nombre}
-                    onChange={handleEditChange}
-                    style={{ width: '80%' }}
-                  />
-                ) : prov.nombre}
-              </td>
-              <td style={{ textAlign: 'left' }}>
-                {editId === prov.id ? (
-                  <input
-                    name="direccion"
-                    value={editForm.direccion}
-                    onChange={handleEditChange}
-                    style={{ width: '90%' }}
-                  />
-                ) : (prov.direccion || '-')}
-              </td>
-              <td style={{ textAlign: 'center' }}>
-                {editId === prov.id ? (
-                  <input
-                    name="telefono"
-                    value={editForm.telefono}
-                    onChange={handleEditChange}
-                    style={{ width: '90%' }}
-                  />
-                ) : (prov.telefono || '-')}
-              </td>
-              <td style={{ textAlign: 'center' }}>
-                {editId === prov.id ? (
-                  <>
-                    <button
-                      style={{ background: '#0071ce', color: '#fff', border: 'none', borderRadius: 6, padding: '0.4rem 1rem', marginRight: 8, cursor: 'pointer' }}
-                      onClick={() => handleSave(prov)}
-                    >
-                      Guardar
-                    </button>
-                    <button
-                      style={{ background: '#888', color: '#fff', border: 'none', borderRadius: 6, padding: '0.4rem 1rem', cursor: 'pointer' }}
-                      onClick={() => setEditId(null)}
-                    >
-                      Cancelar
-                    </button>
-                  </>
-                ) : (
-                  <>
-                    <button
-                      style={{ background: '#0071ce', color: '#fff', border: 'none', borderRadius: 6, padding: '0.4rem 1rem', marginRight: 8, cursor: 'pointer' }}
-                      onClick={() => handleEdit(prov)}
-                    >
-                      Editar
-                    </button>
-                    <button
-                      style={{ background: '#e53935', color: '#fff', border: 'none', borderRadius: 6, padding: '0.4rem 1rem', cursor: 'pointer' }}
-                      onClick={() => handleDelete(prov)}
-                    >
-                      Eliminar
-                    </button>
-                  </>
-                )}
-              </td>
+      <div ref={tableRef}>
+        <table style={{ width: '100%', borderCollapse: 'collapse', marginTop: 20 }}>
+          <thead>
+            <tr style={{ background: '#f4f4f4' }}>
+              <th style={{ width: 40, textAlign: 'center', padding: 6, height: 28 }}>ID</th>
+              <th style={{ width: 140, textAlign: 'center', padding: 6, height: 28 }}>Nombre</th>
+              <th style={{ width: 180, textAlign: 'center', padding: 6, height: 28 }}>Dirección</th>
+              <th style={{ width: 120, textAlign: 'center', padding: 6, height: 28 }}>Teléfono</th>
+              <th style={{ width: 120, textAlign: 'center', padding: 6, height: 28 }}>Acción</th>
             </tr>
-          ))}
-        </tbody>
-      </table>
+          </thead>
+          <tbody>
+            {proveedores.map(prov => (
+              <tr
+                key={prov.id}
+                className={selectedRow === prov.id ? 'selected-row' : ''}
+                onClick={() => setSelectedRow(prov.id)}
+                style={{ cursor: 'pointer' }}
+              >
+                <td style={{ textAlign: 'center', padding: 6, height: 28 }}>{prov.id}</td>
+                <td style={{ textAlign: 'center', padding: 6, height: 28 }}>
+                  {editId === prov.id ? (
+                    <input
+                      name="nombre"
+                      value={editForm.nombre}
+                      onChange={handleEditChange}
+                      style={{ width: '95%', padding: '2px 4px', borderRadius: 4, border: '1px solid #ccc', fontSize: 14 }}
+                      onClick={e => e.stopPropagation()}
+                      autoFocus
+                      maxLength={40}
+                    />
+                  ) : (
+                    <span title={prov.nombre}>
+                      {prov.nombre.length > 18 ? prov.nombre.slice(0, 18) + '…' : prov.nombre}
+                    </span>
+                  )}
+                </td>
+                <td style={{ textAlign: 'center', padding: 6, height: 28 }}>
+                  {editId === prov.id ? (
+                    <input
+                      name="direccion"
+                      value={editForm.direccion}
+                      onChange={handleEditChange}
+                      style={{ width: '95%', padding: '2px 4px', borderRadius: 4, border: '1px solid #ccc', fontSize: 14 }}
+                      onClick={e => e.stopPropagation()}
+                      maxLength={40}
+                    />
+                  ) : (
+                    <span title={prov.direccion}>
+                      {prov.direccion.length > 18 ? prov.direccion.slice(0, 18) + '…' : prov.direccion}
+                    </span>
+                  )}
+                </td>
+                <td style={{ textAlign: 'center', padding: 6, height: 28 }}>
+                  {editId === prov.id ? (
+                    <input
+                      name="telefono"
+                      value={editForm.telefono}
+                      onChange={handleEditChange}
+                      style={{ width: '95%', padding: '2px 4px', borderRadius: 4, border: '1px solid #ccc', fontSize: 14 }}
+                      onClick={e => e.stopPropagation()}
+                    />
+                  ) : (
+                    prov.telefono
+                  )}
+                </td>
+                <td style={{ textAlign: 'center', padding: 6, height: 28 }}>
+                  {selectedRow === prov.id && (
+                    <div style={{ display: 'flex', justifyContent: 'center', gap: 6 }}>
+                      {editId === prov.id ? (
+                        <>
+                          <button
+                            style={{ background: '#0071ce', color: '#fff', border: 'none', borderRadius: 6, padding: '4px 10px', marginRight: 4, cursor: 'pointer', fontSize: 14 }}
+                            onClick={e => { e.stopPropagation(); handleSave(prov); }}
+                          >
+                            Guardar
+                          </button>
+                          <button
+                            style={{ background: '#888', color: '#fff', border: 'none', borderRadius: 6, padding: '4px 10px', cursor: 'pointer', fontSize: 14 }}
+                            onClick={e => { e.stopPropagation(); setEditId(null); }}
+                          >
+                            Cancelar
+                          </button>
+                        </>
+                      ) : (
+                        <>
+                          <button
+                            style={{ background: '#0071ce', color: '#fff', border: 'none', borderRadius: 6, padding: '4px 10px', marginRight: 4, cursor: 'pointer', fontSize: 14 }}
+                            onClick={e => { e.stopPropagation(); handleEdit(prov); }}
+                          >
+                            Editar
+                          </button>
+                          <button
+                            style={{ background: '#e53935', color: '#fff', border: 'none', borderRadius: 6, padding: '4px 10px', cursor: 'pointer', fontSize: 14 }}
+                            onClick={e => { e.stopPropagation(); handleDelete(prov); }}
+                          >
+                            Eliminar
+                          </button>
+                        </>
+                      )}
+                    </div>
+                  )}
+                </td>
+              </tr>
+            ))}
+          </tbody>
+        </table>
+      </div>
     </div>
   );
 }

@@ -8,6 +8,7 @@ function CategoriesView({ onBack }) {
   const [mensaje, setMensaje] = useState('');
   const [nuevoNombre, setNuevoNombre] = useState('');
   const [agregando, setAgregando] = useState(false);
+  const [selectedRow, setSelectedRow] = useState(null);
 
   useEffect(() => {
     obtenerCategorias().then(data => setCategorias(Array.isArray(data) ? data : []));
@@ -125,7 +126,11 @@ function CategoriesView({ onBack }) {
         </thead>
         <tbody>
           {categorias.map(cat => (
-            <tr key={cat.id}>
+            <tr
+              key={cat.id}
+              className={selectedRow === cat.id ? 'selected-row' : ''}
+              onClick={() => setSelectedRow(cat.id)}
+            >
               <td style={{ width: 80, textAlign: 'center' }}>{cat.id}</td>
               <td style={{ textAlign: 'center', paddingLeft: 16 }}>
                 {editId === cat.id ? (

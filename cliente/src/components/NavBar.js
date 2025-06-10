@@ -1,9 +1,11 @@
 import React, { useState, useRef, useEffect } from 'react';
-import { FaShoppingCart, FaBars } from 'react-icons/fa';
+import { FaShoppingCart, FaBars, FaUser } from 'react-icons/fa';
+import { useNavigate } from 'react-router-dom';
 
 function NavBar({ onCartClick, onShowProviders, onShowCategories, onHistoryClick, onLogout, cartCount, onShowUsers, isAdmin, usuario }) {
   const [menuOpen, setMenuOpen] = useState(false);
   const menuRef = useRef(null);
+  const navigate = useNavigate();
 
   // Cerrar menú al hacer clic fuera
   useEffect(() => {
@@ -26,14 +28,23 @@ function NavBar({ onCartClick, onShowProviders, onShowCategories, onHistoryClick
     <nav className="navbar">
       <div className="navbar-content">
         <div className="navbar-logo" style={{ display: 'flex', alignItems: 'center', gap: '1.2rem' }}>
-          <span style={{ fontWeight: 'bold', fontSize: '1.2rem', color: '#fff' }}>Walmart</span>
+          <span style={{ fontWeight: 'bold', fontSize: '1.2rem', color: '#fff' }}>UVmart</span>
           {usuario && usuario.nombre && usuario.apellido && (
             <span style={{ fontSize: '1rem', color: '#fff', fontWeight: 500 }}>
               Bienvenido {usuario.nombre} {usuario.apellido}
             </span>
           )}
         </div>
-        <div className="navbar-actions" style={{ display: 'flex', alignItems: 'center', gap: '1.2rem' }}>
+        <div
+          className="navbar-actions"
+          style={{
+            display: 'flex',
+            alignItems: 'center',
+            gap: '1.2rem', // Reducido para juntar más los iconos
+            minWidth: 120, // Opcional: reduce el ancho mínimo
+            justifyContent: 'flex-end' // Alinea los iconos a la derecha
+          }}
+        >
           <button className="btn" onClick={onCartClick} style={{ fontSize: 28, position: 'relative' }}>
             <FaShoppingCart size={32} />
             {cartCount > 0 && (
@@ -58,10 +69,25 @@ function NavBar({ onCartClick, onShowProviders, onShowCategories, onHistoryClick
               </span>
             )}
           </button>
+          <button
+            onClick={() => navigate('/usuario')}
+            style={{
+              background: 'none',
+              border: 'none',
+              cursor: 'pointer',
+              fontSize: 28,
+              color: '#fff',
+              marginLeft: 0,
+              marginRight: 0
+            }}
+            title="Ver información de usuario"
+          >
+            <FaUser />
+          </button>
+          <button className="btn" onClick={() => setMenuOpen(!menuOpen)} style={{ fontSize: 28, color: '#fff' }}>
+            <FaBars size={32} />
+          </button>
           <div style={{ position: 'relative' }}>
-            <button className="btn" onClick={() => setMenuOpen(!menuOpen)} style={{ fontSize: 28 }}>
-              <FaBars size={32} />
-            </button>
             {menuOpen && (
               <div
                 ref={menuRef}

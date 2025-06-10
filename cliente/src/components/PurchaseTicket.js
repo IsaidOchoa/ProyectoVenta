@@ -13,6 +13,10 @@ function formatFecha(fecha) {
   return fecha.split(' ')[0];
 }
 
+function formatHora(fecha) {
+  return fecha.split(' ')[1] || '';
+}
+
 function PurchaseTicket({ compra, idx, onDeleteTicket }) {
   const [detalles, setDetalles] = useState(null);
   const [open, setOpen] = useState(false);
@@ -51,7 +55,7 @@ function PurchaseTicket({ compra, idx, onDeleteTicket }) {
       >
         <div style={{ display: 'flex', flexDirection: 'column', flex: 1 }}>
           <div style={{ fontWeight: 'bold', fontSize: '1.1rem', display: 'flex', alignItems: 'center', gap: 24 }}>
-            <span>Ticket {idx}</span>
+            <span>Ticket {compra.numero_ticket}</span>
             <span style={{ fontWeight: 'normal', color: '#222', fontSize: '1rem' }}>
               Total: ${compra.total}
             </span>
@@ -94,11 +98,24 @@ function PurchaseTicket({ compra, idx, onDeleteTicket }) {
           {compra.estado}
         </div>
       </div>
-      <Modal open={open} onClose={handleClose} title="Productos comprados" width={600}>
-        {!detalles ? (
-          <p>Cargando...</p>
-        ) : (
-          <div>
+      <Modal open={open} onClose={handleClose} title={
+  <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'flex-start', textAlign: 'left' }}>
+    <div style={{ fontWeight: 'bold', fontSize: '1.2rem', marginBottom: 10 }}>
+      Ticket {compra.numero_ticket}
+    </div>
+    <div style={{ height: 10 }} /> {/* Primer espacio en blanco */}
+    <div style={{ fontWeight: 'bold', fontSize: '1.15rem', marginBottom: 18 }}>
+      Productos comprados
+    </div>
+    <div style={{ height: 10 }} /> {/* Segundo espacio en blanco */}
+    <div style={{ fontWeight: 'bold', marginBottom: 12 }}>
+      Hora de compra:{" "}
+      <span style={{ fontWeight: 'normal' }}>{formatHora(compra.fecha)}</span>
+    </div>
+  </div>
+} width={600}>
+        {detalles ? (
+          <>
             <div style={{ maxHeight: 260, overflowY: 'auto', marginBottom: 8 }}>
               <table style={{ width: '100%', borderCollapse: 'collapse' }}>
                 <thead>
@@ -141,7 +158,9 @@ function PurchaseTicket({ compra, idx, onDeleteTicket }) {
               <span>Total</span>
               <span>${compra.total}</span>
             </div>
-          </div>
+          </>
+        ) : (
+          <p>Cargando...</p>
         )}
       </Modal>
       <Modal

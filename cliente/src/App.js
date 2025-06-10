@@ -1,5 +1,5 @@
 import React, { useState, useEffect } from 'react';
-import { useNavigate, Routes, Route, Navigate, useParams } from 'react-router-dom';
+import { useNavigate, Routes, Route, Navigate, useParams, useLocation } from 'react-router-dom';
 import NavBar from './components/NavBar';
 import ProductList from './components/ProductList';
 import SearchBar from './components/SearchBar';
@@ -19,6 +19,8 @@ import Login from './components/Login';
 import RegisterView from './components/RegisterView';
 import UsersView from './components/UsersView';
 import Modal from './components/Modal';
+import UserInfo from './components/UserInfo';
+import Loader from './components/Loader';
 import {
   obtenerProductos,
   crearProducto,
@@ -36,6 +38,7 @@ import {
   vaciarCarrito
 } from './services/CarritoService';
 import { realizarCompra, obtenerHistorial } from './services/CompraService';
+import { obtenerCategorias } from './services/CategoriasService';
 import './App.css';
 
 // Wrapper para detalle de producto usando useParams
@@ -56,7 +59,7 @@ function ProductDetailWrapper({ productos, onAddToCart, onSelectProduct }) {
 }
 
 // HomeView simple (puedes moverlo a views/HomeView.js si prefieres)
-function HomeView({ productos, onAddToCart, onProductClick, isAdmin, busqueda, setBusqueda, handleSearch }) {
+function HomeView({ productos, onAddToCart, onProductClick, isAdmin, busqueda, setBusqueda, handleSearch, categorias, categoriaSeleccionada, setCategoriaSeleccionada }) {
   return (
     <>
       <div className="search-actions-container">
@@ -64,6 +67,9 @@ function HomeView({ productos, onAddToCart, onProductClick, isAdmin, busqueda, s
           value={busqueda}
           onChange={setBusqueda}
           onSearch={handleSearch}
+          categorias={categorias}
+          categoriaSeleccionada={categoriaSeleccionada}
+          onCategoryChange={setCategoriaSeleccionada}
           sticky
         />
         {isAdmin && (
@@ -78,11 +84,18 @@ function HomeView({ productos, onAddToCart, onProductClick, isAdmin, busqueda, s
         )}
       </div>
       <div style={{ display: 'flex', flexWrap: 'wrap', gap: '1rem', justifyContent: 'center' }}>
-        <ProductList
-          productos={productos}
-          onAddToCart={onAddToCart}
-          onProductClick={onProductClick}
-        />
+        {productos.length === 0 ? (
+          <div style={{ fontSize: 20, color: '#888', marginTop: 40 }}>
+            No hay productos disponibles
+          </div>
+        ) : (
+          <ProductList
+            productos={productos}
+            onAddToCart={onAddToCart}
+            onProductClick={onProductClick}
+            isAdmin={isAdmin}
+          />
+        )}
       </div>
     </>
   );
@@ -100,8 +113,21 @@ function App() {
   const [showRegister, setShowRegister] = useState(false);
   const [productoAEditar, setProductoAEditar] = useState(null);
   const [modalVentaOpen, setModalVentaOpen] = useState(false);
+  const [modalLogoutOpen, setModalLogoutOpen] = useState(false); // Nuevo estado para el modal de logout
+  const [loading, setLoading] = useState(false); // Nuevo estado para loading
+  const [categoriaSeleccionada, setCategoriaSeleccionada] = useState(''); // Estado para la categoría seleccionada
+  const [categorias, setCategorias] = useState([]);
 
+  const location = useLocation();
   const navigate = useNavigate();
+
+  // Loader en cada navegación
+  useEffect(() => {
+    setLoading(true);
+    // Espera a que el render termine y oculta el loader
+    const timeout = setTimeout(() => setLoading(false), 400); // 400ms para que se note la transición
+    return () => clearTimeout(timeout);
+  }, [location.pathname]);
 
   // Recupera usuario y rol
   useEffect(() => {
@@ -125,14 +151,18 @@ function App() {
 
   // Carga productos desde el servicio
   useEffect(() => {
-    obtenerProductos()
-      .then(data => {
-        setProductos(data);
-        setProductosFiltrados(data);
-      })
-      .catch(error => {
-        alert(error.message || 'Error al cargar productos');
-      });
+    setLoading(true);
+    setTimeout(() => { // Simula 1.5 segundos de carga
+      obtenerProductos()
+        .then(data => {
+          setProductos(data);
+          setProductosFiltrados(data);
+        })
+        .catch(error => {
+          alert(error.message || 'Error al cargar productos');
+        })
+        .finally(() => setLoading(false));
+    }, 1500);
   }, []);
 
   // Guarda el carrito en localStorage por usuario
@@ -171,6 +201,13 @@ function App() {
         .catch(() => setHistorial([]));
     }
   }, [usuario]);
+
+  // Carga las categorías disponibles
+  useEffect(() => {
+    obtenerCategorias()
+      .then(data => setCategorias(data)) // <-- Guarda los objetos completos
+      .catch(() => setCategorias([]));
+  }, []);
 
   // --- Handlers del carrito usando el servicio ---
   const handleAddToCart = async (producto) => {
@@ -283,13 +320,52 @@ function App() {
 
   const handleSearch = (texto = busqueda) => {
     let filtro = productos.filter(p =>
-      p.nombre.toLowerCase().startsWith(texto.toLowerCase())
+      p.nombre.toLowerCase().startsWith(busqueda.toLowerCase())
     );
     if (!isAdmin) {
       filtro = filtro.filter(p => p.estado === 1);
     }
     setProductosFiltrados(filtro);
   };
+
+  // --- Renderizado principal con rutas ---
+  // Mueve esto arriba:
+  const productosVisibles = isAdmin
+    ? productos
+    : productos.filter(p => p.estado === 1);
+
+  // Justo después de obtener productos y categorías:
+  const productosConCategoria = productosVisibles.map(p => {
+    // Busca la categoría correspondiente por id (ajusta si tu campo es diferente)
+    const cat = categorias.find(c => c.id === p.categoria_id);
+    return {
+      ...p,
+      nombre_categoria: cat ? cat.nombre_categoria : ''
+    };
+  });
+
+  // Ahora filtra sobre productosConCategoria
+  const productosFiltradosPorCategoria = productosVisibles.filter(p =>
+    (!categoriaSeleccionada ||
+      (p.categoria_nombre &&
+        p.categoria_nombre.trim().toLowerCase() === categoriaSeleccionada.trim().toLowerCase())
+    ) &&
+    (
+      !busqueda ||
+      p.nombre.toLowerCase().startsWith(busqueda.toLowerCase())
+    )
+  );
+
+  console.log('Productos:', productos);
+  const categoriasDisponibles = Array.from(new Set(productos.map(p => p.categoria))).filter(Boolean);
+  console.log('Categorias:', categoriasDisponibles);
+  console.log('Productos desde BD:', productosVisibles.map(p => ({
+    id: p.id,
+    nombre: p.nombre,
+    nombre_categoria: p.nombre_categoria,
+    categoria: p.categoria
+  })));
+  console.log('Categoria seleccionada:', categoriaSeleccionada);
 
   // --- Login y registro usando rutas ---
   if (!usuario) {
@@ -305,6 +381,7 @@ function App() {
           element={
             <Login
               onLogin={async ({ correo, contrasena }) => {
+                setLoading(true);
                 try {
                   const data = await loginUsuario({ correo, contrasena });
                   if (data.success) {
@@ -318,6 +395,8 @@ function App() {
                   }
                 } catch (error) {
                   alert('Error al conectar con el servidor');
+                } finally {
+                  setLoading(false);
                 }
               }}
               onShowRegister={() => navigate('/register')}
@@ -327,19 +406,14 @@ function App() {
       </Routes>
     );
   }
-
-  // --- Renderizado principal con rutas ---
-  const productosVisibles = isAdmin
-    ? productos
-    : productos.filter(p => p.estado === 1);
-
+  
   return (
     <>
       <NavBar
         cartCount={cart.reduce((sum, item) => sum + item.cantidad, 0)}
         onCartClick={() => navigate('/carrito')}
         onHistoryClick={() => navigate('/historial')}
-        onLogout={() => { setUsuario(null); setShowRegister(false); navigate('/login'); }}
+        onLogout={() => setModalLogoutOpen(true)} // Cambia aquí para mostrar el modal
         onAddProduct={() => navigate('/agregar-producto')}
         onAddCategory={() => navigate('/agregar-categoria')}
         onAddProvider={() => navigate('/agregar-proveedor')}
@@ -349,20 +423,28 @@ function App() {
         isAdmin={isAdmin}
         usuario={usuario}
       />
+      {loading && <Loader />}
       <Routes>
         <Route path="/" element={
           <HomeView
-            productos={productosFiltrados.length > 0 || busqueda ? productosFiltrados : productosVisibles}
+            productos={productosFiltradosPorCategoria}
             onAddToCart={handleAddToCart}
             onProductClick={producto => {
-              if (producto === 'add') navigate('/agregar-producto');
-              else if (producto === 'edit') navigate('/editar-productos');
-              else navigate(`/producto/${producto.id}`);
+              if (producto === 'add') {
+                navigate('/agregar-producto');
+              } else if (producto === 'edit') {
+                navigate('/editar-productos');
+              } else {
+                navigate(`/producto/${producto.id}`);
+              }
             }}
             isAdmin={isAdmin}
             busqueda={busqueda}
             setBusqueda={setBusqueda}
             handleSearch={handleSearch}
+            categorias={categorias} // <-- Cambia esto
+            categoriaSeleccionada={categoriaSeleccionada}
+            setCategoriaSeleccionada={setCategoriaSeleccionada}
           />
         } />
         <Route path="/carrito" element={
@@ -435,6 +517,12 @@ function App() {
         <Route path="/usuarios" element={
           isAdmin ? <UsersView onBack={() => navigate('/')} /> : <Navigate to="/" />
         } />
+        <Route path="/usuario" element={
+          <UserInfo
+            usuario={usuario}
+            onUpdateUsuario={setUsuario} // <-- Esto es clave
+          />
+        } />
         <Route path="*" element={<Navigate to="/" />} />
       </Routes>
       {/* Toasts */}
@@ -452,6 +540,51 @@ function App() {
           <Toast key={toast.id} mensaje={toast.mensaje} visible={toast.visible} />
         ))}
       </div>
+
+      {/* Modal de confirmación de logout */}
+      <Modal
+        open={modalLogoutOpen}
+        onClose={() => setModalLogoutOpen(false)}
+        title="Cerrar sesión"
+        showClose={true}
+        width={400}
+      >
+        <div style={{ marginBottom: 24, fontSize: 18 }}>
+          ¿Seguro que deseas cerrar sesión?
+        </div>
+        <button
+          onClick={() => {
+            setModalLogoutOpen(false);
+            setUsuario(null);
+            setShowRegister(false);
+            navigate('/login');
+          }}
+          style={{
+            background: '#1976d2',
+            color: '#fff',
+            padding: '8px 24px',
+            borderRadius: 4,
+            border: 'none',
+            fontWeight: 600,
+            marginRight: 16
+          }}
+        >
+          Confirmar
+        </button>
+        <button
+          onClick={() => setModalLogoutOpen(false)}
+          style={{
+            background: '#eee',
+            color: '#1976d2',
+            padding: '8px 24px',
+            borderRadius: 4,
+            border: 'none',
+            fontWeight: 600
+          }}
+        >
+          Cancelar
+        </button>
+      </Modal>
       <Modal
         open={modalVentaOpen}
         onClose={() => setModalVentaOpen(false)}

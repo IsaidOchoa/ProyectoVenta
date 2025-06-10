@@ -105,8 +105,7 @@ class UsuariosController {
 
     public static function getAll() {
         $db = (new Database())->getConnection();
-        $stmt = $db->query("SELECT id, nombre, correo, rol, fecha_registro FROM usuarios");
-        $usuarios = $stmt->fetchAll(PDO::FETCH_ASSOC);
+        $usuarios = UsuarioService::obtenerTodos($db);
         echo json_encode($usuarios);
         exit;
     }
@@ -126,6 +125,36 @@ class UsuariosController {
         } else {
             http_response_code(500);
             echo json_encode(['success' => false, 'message' => 'Error al actualizar estado']);
+        }
+        exit;
+    }
+
+    public static function update($id) {
+        $input = json_decode(file_get_contents('php://input'), true);
+        if (!$input) {
+            http_response_code(400);
+            echo json_encode(['success' => false, 'message' => 'Datos inválidos']);
+            exit;
+        }
+        $db = (new Database())->getConnection();
+        $resultado = UsuarioService::actualizarUsuario($db, $id, $input);
+        if ($resultado['success']) {
+            echo json_encode(['success' => true, 'message' => $resultado['message']]);
+        } else {
+            http_response_code(400);
+            echo json_encode(['success' => false, 'message' => $resultado['message']]);
+        }
+        exit;
+    }
+
+    public static function getById($id) {
+        $db = (new Database())->getConnection();
+        $resultado = UsuarioService::obtenerUsuarioPorId($db, $id);
+        if ($resultado['success']) {
+            echo json_encode(['success' => true, 'usuario' => $resultado['usuario']]);
+        } else {
+            http_response_code(404);
+            echo json_encode(['success' => false, 'message' => $resultado['message']]);
         }
         exit;
     }

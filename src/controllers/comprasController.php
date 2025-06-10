@@ -53,12 +53,18 @@ class ComprasController {
                 $total += $prod['precio'] * $item['cantidad'];
             }
 
-            // 2. Insertar en ventas
-            $stmt = $db->prepare("INSERT INTO ventas (usuario_id, total) VALUES (?, ?)");
-            $stmt->execute([$usuario_id, $total]);
+            // 2. Obtener el siguiente numero_ticket para el usuario
+            $stmt = $db->prepare("SELECT IFNULL(MAX(numero_ticket), 0) + 1 AS next_ticket FROM ventas WHERE usuario_id = ?");
+            $stmt->execute([$usuario_id]);
+            $row = $stmt->fetch();
+            $numero_ticket = $row['next_ticket'];
+
+            // 3. Insertar la venta con el nuevo campo
+            $stmt = $db->prepare("INSERT INTO ventas (usuario_id, fecha, total, estado, numero_ticket) VALUES (?, NOW(), ?, ?, ?)");
+            $stmt->execute([$usuario_id, $total, 'pendiente', $numero_ticket]);
             $venta_id = $db->lastInsertId();
 
-            // 3. Insertar en venta_detalle y actualizar stock
+            // 4. Insertar en venta_detalle y actualizar stock
             foreach ($productos as $item) {
                 $stmt = $db->prepare("SELECT nombre, precio FROM productos WHERE id = ?");
                 $stmt->execute([$item['id']]);
@@ -104,7 +110,7 @@ class ComprasController {
 
     public static function historialPorUsuario($usuario_id) {
         $db = (new Database())->getConnection();
-        $stmt = $db->prepare("SELECT id, total, fecha, estado FROM ventas WHERE usuario_id = ? ORDER BY fecha DESC");
+        $stmt = $db->prepare("SELECT id, total, fecha, estado, numero_ticket FROM ventas WHERE usuario_id = ? ORDER BY fecha DESC");
         $stmt->execute([$usuario_id]);
         $ventas = $stmt->fetchAll(PDO::FETCH_ASSOC);
 

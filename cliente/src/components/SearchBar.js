@@ -1,19 +1,20 @@
 import React from 'react';
-import { FaSearch } from 'react-icons/fa';
 
-function SearchBar({ value, onChange, onSearch, sticky = false }) {
+function SearchBar({ value, onChange, onSearch, onCategoryChange, categorias = [], categoriaSeleccionada, sticky = false }) {
+  console.log('categorias prop en SearchBar:', categorias);
+
   return (
     <div
       style={{
         display: 'flex',
         alignItems: 'center',
-        margin: 0, // Quita el espacio arriba y abajo
+        margin: 0,
         position: sticky ? 'sticky' : 'static',
         top: sticky ? 0 : 'auto',
         zIndex: sticky ? 100 : 'auto',
         background: sticky ? '#fff' : 'transparent',
         boxShadow: sticky ? '0 2px 8px rgba(0,0,0,0.08)' : 'none',
-        padding: sticky ? '0.3rem 0' : 0 // Reduce el padding vertical
+        padding: sticky ? '0.3rem 0' : 0
       }}
     >
       <div
@@ -22,9 +23,10 @@ function SearchBar({ value, onChange, onSearch, sticky = false }) {
           display: 'flex',
           justifyContent: 'center',
           alignItems: 'center',
-          padding: '0.3rem', // Reduce el padding interno
+          padding: '0.3rem',
           maxWidth: 1200,
           margin: '0 auto',
+          gap: 12
         }}
       >
         <input
@@ -33,34 +35,37 @@ function SearchBar({ value, onChange, onSearch, sticky = false }) {
           value={value}
           onChange={e => {
             onChange(e.target.value);
-            onSearch(e.target.value); // Llama a la búsqueda en vivo
+            if (typeof onSearch === 'function') onSearch(e.target.value);
           }}
           style={{
-            width: '60%',
+            width: categorias && categorias.length > 0 ? '60%' : '100%',
             padding: '0.5rem',
             fontSize: '1rem',
             border: '1px solid #ccc',
-            borderRadius: '24px 0 0 24px',
+            borderRadius: categorias && categorias.length > 0 ? '24px 0 0 24px' : '24px',
             outline: 'none'
           }}
         />
-        <button
-          className="btn"
-          onClick={onSearch}
-          style={{
-            background: '#FFD600',
-            color: '#222',
-            border: 'none',
-            padding: '0.5rem 1.2rem',
-            borderRadius: '0 24px 24px 0',
-            cursor: 'pointer',
-            display: 'flex',
-            alignItems: 'center',
-            fontSize: 18
-          }}
-        >
-          <FaSearch />
-        </button>
+        {categorias && categorias.length > 0 && (
+          <select
+            value={categoriaSeleccionada || ''}
+            onChange={e => onCategoryChange(e.target.value)}
+            style={{
+              padding: '0.5rem 1rem',
+              borderRadius: '0 24px 24px 0',
+              border: '1px solid #ccc',
+              fontSize: '1rem',
+              outline: 'none'
+            }}
+          >
+            <option value="">Todas las categorías</option>
+            {categorias.map(cat => (
+              <option key={cat.id} value={cat.nombre_categoria}>
+                {cat.nombre_categoria}
+              </option>
+            ))}
+          </select>
+        )}
       </div>
     </div>
   );

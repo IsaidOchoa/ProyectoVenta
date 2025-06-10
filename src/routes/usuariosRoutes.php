@@ -37,6 +37,12 @@ if (strpos($request_uri, '/api/usuarios') === 0) {
     } elseif ($request_method === "GET" && $request_uri === '/api/usuarios') {
         file_put_contents(__DIR__ . '/debug_registro.log', "Llama a UsuariosController::getAll()\n", FILE_APPEND);
         UsuariosController::getAll();
+    } elseif ($request_method === "GET" && preg_match('#^/api/usuarios/(\d+)$#', $request_uri, $matches)) {
+        file_put_contents(__DIR__ . '/debug_registro.log', "Llama a UsuariosController::getById()\n", FILE_APPEND);
+        UsuariosController::getById($matches[1]);
+    } elseif ($request_method === "PUT" && preg_match('#^/api/usuarios/(\d+)$#', $request_uri, $matches)) {
+        file_put_contents(__DIR__ . '/debug_registro.log', "Llama a UsuariosController::update()\n", FILE_APPEND);
+        UsuariosController::update($matches[1]);
     } elseif ($request_method === "PUT" && preg_match('#^/api/usuarios/(\d+)/estado$#', $request_uri, $matches)) {
         file_put_contents(__DIR__ . '/debug_registro.log', "Llama a UsuariosController::toggleEstado()\n", FILE_APPEND);
         UsuariosController::toggleEstado($matches[1]);

@@ -35,3 +35,19 @@ export async function cambiarEstadoUsuario(id, estado) {
   if (!res.ok) throw new Error('Error al cambiar estado');
   return res.json();
 }
+
+export async function actualizarUsuario(id, datos) {
+  const res = await fetch(`${API_URL}/${id}`, {
+    method: 'PUT',
+    headers: { 'Content-Type': 'application/json' },
+    body: JSON.stringify(datos)
+  });
+  if (!res.ok) throw new Error('Error al actualizar usuario');
+  return res.json();
+}
+
+export async function obtenerUsuarioPorId(id) {
+  const res = await fetch(`${API_URL}/${id}`);
+  if (!res.ok) throw new Error('Error al obtener usuario');
+  return res.json();
+}

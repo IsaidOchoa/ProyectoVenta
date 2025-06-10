@@ -73,16 +73,11 @@ class UsuarioService {
         }
 
         // Buscar usuario por correo
-        $stmt = $db->prepare("SELECT * FROM usuarios WHERE correo = ?");
+        $stmt = $db->prepare("SELECT * FROM usuarios WHERE correo = ? AND estado_usuario = 1");
         $stmt->execute([$correo]);
         $usuario = $stmt->fetch(PDO::FETCH_ASSOC);
 
         if (!$usuario) {
-            return ['success' => false, 'message' => 'Usuario o contraseña incorrectos'];
-        }
-
-        // Verificar si el usuario está activo
-        if (isset($usuario['estado_usuario']) && $usuario['estado_usuario'] != 1) {
             return ['success' => false, 'message' => 'Usuario NO disponible'];
         }
 
@@ -95,6 +90,70 @@ class UsuarioService {
         unset($usuario['contrasena']);
 
         return ['success' => true, 'usuario' => $usuario];
+    }
+
+    public static function actualizarUsuario($db, $id, $datos) {
+        // Construir el set dinámicamente
+        $campos = [];
+        $params = [];
+
+        // Campos editables
+        $editables = [
+            'nombre', 'apellido', 'correo', 'telefono', 'pais',
+            'estado_direccion', 'ciudad', 'calle', 'colonia',
+            'codigo_postal', 'numero_domicilio'
+        ];
+
+        foreach ($editables as $campo) {
+            if (isset($datos[$campo])) {
+                $campos[] = "$campo = ?";
+                $params[] = $datos[$campo];
+            }
+        }
+
+        // Contraseña (solo si se envía y no está vacía)
+        if (!empty($datos['contrasena'])) {
+            // Opcional: verifica si ya está hasheada (los hashes bcrypt empiezan con $2y$)
+            if (strpos($datos['contrasena'], '$2y$') !== 0) {
+                $campos[] = "contrasena = ?";
+                $params[] = password_hash($datos['contrasena'], PASSWORD_DEFAULT);
+            }
+        }
+
+        if (empty($campos)) {
+            return ['success' => false, 'message' => 'No hay datos para actualizar'];
+        }
+
+        $params[] = $id;
+        $sql = "UPDATE usuarios SET " . implode(', ', $campos) . " WHERE id = ?";
+
+        $stmt = $db->prepare($sql);
+        $ok = $stmt->execute($params);
+
+        if ($ok) {
+            return ['success' => true, 'message' => 'Usuario actualizado correctamente'];
+        } else {
+            return ['success' => false, 'message' => 'Error al actualizar usuario'];
+        }
+    }
+
+    public static function obtenerUsuarioPorId($db, $id) {
+        $stmt = $db->prepare("SELECT * FROM usuarios WHERE id = ?");
+        $stmt->execute([$id]);
+        $usuario = $stmt->fetch(PDO::FETCH_ASSOC);
+
+        if (!$usuario) {
+            return ['success' => false, 'message' => 'Usuario no encontrado'];
+        }
+
+        // No devuelvas la contraseña en texto plano, pero puedes devolver la longitud para censurar
+        $usuario['contrasena'] = isset($usuario['contrasena']) ? str_repeat('•', 8) : '';
+        return ['success' => true, 'usuario' => $usuario];
+    }
+
+    public static function obtenerTodos($db) {
+        $stmt = $db->query("SELECT id, nombre, apellido, correo, rol, estado_usuario, fecha_registro FROM usuarios");
+        return $stmt->fetchAll(PDO::FETCH_ASSOC);
     }
 }
 ?>

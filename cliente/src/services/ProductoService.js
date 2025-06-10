@@ -47,7 +47,7 @@ export async function eliminarProducto(id) {
 
 export async function activarProducto(id) {
   const res = await fetch(`${API_URL}/Activar/${id}`, {
-    method: 'POST',
+    method: 'PUT',
   });
   if (!res.ok) throw new Error('Error al activar producto');
   return res.json();
@@ -55,7 +55,7 @@ export async function activarProducto(id) {
 
 export async function desactivarProducto(id) {
   const res = await fetch(`${API_URL}/Desactivar/${id}`, {
-    method: 'POST',
+    method: 'PUT',
   });
   if (!res.ok) throw new Error('Error al desactivar producto');
   return res.json();
