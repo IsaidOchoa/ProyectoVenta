@@ -1,7 +1,7 @@
 import React, { useState } from 'react';
 import { obtenerDetalleVenta } from '../services/CompraService';
 import Modal from './Modal';
-import { FaTrash } from 'react-icons/fa'; // Si usas react-icons
+import { FaTrash } from 'react-icons/fa';
 
 const estadoColor = {
   'en bodega': '#888',
@@ -21,6 +21,8 @@ function PurchaseTicket({ compra, idx, onDeleteTicket }) {
   const [detalles, setDetalles] = useState(null);
   const [open, setOpen] = useState(false);
   const [showDeleteModal, setShowDeleteModal] = useState(false);
+  const [hovered, setHovered] = useState(false);
+  const [active, setActive] = useState(false);
 
   const handleOpen = async () => {
     if (!detalles) {
@@ -36,22 +38,34 @@ function PurchaseTicket({ compra, idx, onDeleteTicket }) {
     <>
       <div
         style={{
-          background: '#f4f4f4',
+          background: active
+            ? '#b3d4fc' // Azul más intenso al hacer clic
+            : hovered
+            ? '#d6eaff' // Azul más claro al pasar el mouse
+            : '#e3f0ff', // Azul claro por defecto
           borderRadius: 12,
           padding: '1.5rem 2rem',
           marginBottom: '1.5rem',
           display: 'flex',
           alignItems: 'center',
           justifyContent: 'space-between',
-          boxShadow: '0 2px 8px #0001',
+          boxShadow: hovered || active ? '0 4px 16px #1976d233' : '0 2px 8px #0001',
           width: '100%',
           maxWidth: 900,
           marginLeft: 'auto',
           marginRight: 'auto',
-          cursor: 'pointer'
+          cursor: 'pointer',
+          transition: 'background 0.18s, box-shadow 0.18s'
         }}
         onClick={handleOpen}
         title="Ver detalles de la compra"
+        onMouseEnter={() => setHovered(true)}
+        onMouseLeave={() => {
+          setHovered(false);
+          setActive(false);
+        }}
+        onMouseDown={() => setActive(true)}
+        onMouseUp={() => setActive(false)}
       >
         <div style={{ display: 'flex', flexDirection: 'column', flex: 1 }}>
           <div style={{ fontWeight: 'bold', fontSize: '1.1rem', display: 'flex', alignItems: 'center', gap: 24 }}>
@@ -99,21 +113,21 @@ function PurchaseTicket({ compra, idx, onDeleteTicket }) {
         </div>
       </div>
       <Modal open={open} onClose={handleClose} title={
-  <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'flex-start', textAlign: 'left' }}>
-    <div style={{ fontWeight: 'bold', fontSize: '1.2rem', marginBottom: 10 }}>
-      Ticket {compra.numero_ticket}
-    </div>
-    <div style={{ height: 10 }} /> {/* Primer espacio en blanco */}
-    <div style={{ fontWeight: 'bold', fontSize: '1.15rem', marginBottom: 18 }}>
-      Productos comprados
-    </div>
-    <div style={{ height: 10 }} /> {/* Segundo espacio en blanco */}
-    <div style={{ fontWeight: 'bold', marginBottom: 12 }}>
-      Hora de compra:{" "}
-      <span style={{ fontWeight: 'normal' }}>{formatHora(compra.fecha)}</span>
-    </div>
-  </div>
-} width={600}>
+        <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'flex-start', textAlign: 'left' }}>
+          <div style={{ fontWeight: 'bold', fontSize: '1.2rem', marginBottom: 10 }}>
+            Ticket {compra.numero_ticket}
+          </div>
+          <div style={{ height: 10 }} />
+          <div style={{ fontWeight: 'bold', fontSize: '1.15rem', marginBottom: 18 }}>
+            Productos comprados
+          </div>
+          <div style={{ height: 10 }} />
+          <div style={{ fontWeight: 'bold', marginBottom: 12 }}>
+            Hora de compra:{" "}
+            <span style={{ fontWeight: 'normal' }}>{formatHora(compra.fecha)}</span>
+          </div>
+        </div>
+      } width={600}>
         {detalles ? (
           <>
             <div style={{ maxHeight: 260, overflowY: 'auto', marginBottom: 8 }}>
@@ -173,7 +187,7 @@ function PurchaseTicket({ compra, idx, onDeleteTicket }) {
           <p>¿Seguro que deseas eliminar este ticket?</p>
           <button
             onClick={() => {
-              onDeleteTicket(compra.id); // Debes pasar esta función como prop desde el historial
+              onDeleteTicket(compra.id);
               setShowDeleteModal(false);
             }}
             style={{

@@ -61,7 +61,7 @@ class ComprasController {
 
             // 3. Insertar la venta con el nuevo campo
             $stmt = $db->prepare("INSERT INTO ventas (usuario_id, fecha, total, estado, numero_ticket) VALUES (?, NOW(), ?, ?, ?)");
-            $stmt->execute([$usuario_id, $total, 'pendiente', $numero_ticket]);
+            $stmt->execute([$usuario_id, $total, 'en bodega', $numero_ticket]);
             $venta_id = $db->lastInsertId();
 
             // 4. Insertar en venta_detalle y actualizar stock

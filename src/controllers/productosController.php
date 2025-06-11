@@ -1,4 +1,5 @@
 <?php
+ob_start();
 header("Access-Control-Allow-Origin: *");
 header("Access-Control-Allow-Headers: Authorization, Content-Type");
 header("Access-Control-Allow-Methods: GET, POST, PUT, DELETE, OPTIONS");
@@ -168,6 +169,5 @@ class ProductosController {
             echo json_encode(['success' => false, 'message' => 'No se pudo activar el producto']);
         }
     }
-}
-        
+} 
 ?>
