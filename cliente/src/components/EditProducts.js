@@ -1,21 +1,27 @@
 import React, { useEffect, useState } from 'react';
 import AddProduct from './AddProduct';
+import SearchBar from './SearchBar';
 import {
   obtenerProductos,
   actualizarProducto,
   activarProducto,
   desactivarProducto
 } from '../services/ProductoService';
+import { obtenerCategorias } from '../services/CategoriasService';
 
 function EditProducts({ onBack }) {
   const [productos, setProductos] = useState([]);
   const [editProduct, setEditProduct] = useState(null);
   const [mensaje, setMensaje] = useState('');
   const [selectedRow, setSelectedRow] = useState(null);
+  const [busqueda, setBusqueda] = useState('');
+  const [categoriaSeleccionada, setCategoriaSeleccionada] = useState('');
+  const [categorias, setCategorias] = useState([]);
   const esAdmin = true; // Simulación de rol admin
 
   useEffect(() => {
     cargarProductos();
+    obtenerCategorias().then(data => setCategorias(Array.isArray(data) ? data : []));
   }, []);
 
   const cargarProductos = () => {
@@ -23,6 +29,16 @@ function EditProducts({ onBack }) {
       .then(data => setProductos(Array.isArray(data) ? data : []))
       .catch(() => setMensaje('Error al cargar productos'));
   };
+
+  // Filtrado de productos por búsqueda y categoría
+  const productosFiltrados = productos.filter(producto => {
+    const coincideBusqueda = producto.nombre.toLowerCase().includes(busqueda.toLowerCase());
+    const coincideCategoria =
+      !categoriaSeleccionada ||
+      (producto.categoria_nombre &&
+        producto.categoria_nombre.trim().toLowerCase() === categoriaSeleccionada.trim().toLowerCase());
+    return coincideBusqueda && coincideCategoria;
+  });
 
   // Función para actualizar producto
   const handleEditSubmit = async (form, setMensaje, setForm) => {
@@ -75,6 +91,19 @@ function EditProducts({ onBack }) {
       <button onClick={onBack} style={{ background: 'none', border: 'none', cursor: 'pointer', marginBottom: 16, fontSize: 18 }}>&larr; Volver</button>
       <h2>Editar productos</h2>
       {mensaje && <div style={{ marginBottom: 16, color: mensaje.includes('correctamente') ? 'green' : 'red' }}>{mensaje}</div>}
+
+      {/* Barra de búsqueda y filtro de categorías */}
+      <div style={{ marginBottom: 24 }}>
+        <SearchBar
+          value={busqueda}
+          onChange={setBusqueda}
+          onSearch={setBusqueda}
+          categorias={categorias}
+          categoriaSeleccionada={categoriaSeleccionada}
+          onCategoryChange={setCategoriaSeleccionada}
+        />
+      </div>
+
       {editProduct && (
         <AddProduct
           initialData={{
@@ -102,7 +131,7 @@ function EditProducts({ onBack }) {
             </tr>
           </thead>
           <tbody>
-            {productos.map(producto => (
+            {productosFiltrados.map(producto => (
               <tr
                 key={producto.id}
                 className={selectedRow === producto.id ? 'selected-row' : ''}

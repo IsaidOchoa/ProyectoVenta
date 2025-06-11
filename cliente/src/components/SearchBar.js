@@ -55,7 +55,7 @@ function SearchBar({ value, onChange, onSearch, onCategoryChange, categorias = [
               borderRadius: '0 24px 24px 0',
               border: '1px solid #ccc',
               fontSize: '1rem',
-              outline: 'none'
+              outline: 'none',
             }}
           >
             <option value="">Todas las categorías</option>

@@ -424,17 +424,20 @@ function UserInfo({ usuario, onUpdateUsuario, onBack }) {
       {!editMode && (
         <div style={{ marginTop: 40, textAlign: 'center' }}>
           <button
-            onClick={onDesactivarClick}
             style={{
-              background: '#d32f2f',
+              background: usuario.rol === 'admin' ? '#aaa' : '#e53935',
               color: '#fff',
-              padding: '10px 32px',
-              borderRadius: 6,
               border: 'none',
+              borderRadius: 8,
+              padding: '1rem 2.5rem',
               fontWeight: 'bold',
-              fontSize: '1rem',
-              cursor: 'pointer'
+              fontSize: 18,
+              marginTop: 18,
+              cursor: usuario.rol === 'admin' ? 'not-allowed' : 'pointer',
+              opacity: usuario.rol === 'admin' ? 0.6 : 1
             }}
+            onClick={onDesactivarClick}
+            disabled={usuario.rol === 'admin'}
           >
             Desactivar cuenta
           </button>

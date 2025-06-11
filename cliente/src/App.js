@@ -58,7 +58,7 @@ function ProductDetailWrapper({ productos, onAddToCart, onSelectProduct }) {
   );
 }
 
-// HomeView simple (puedes moverlo a views/HomeView.js si prefieres)
+// HomeView simple
 function HomeView({ productos, onAddToCart, onProductClick, isAdmin, busqueda, setBusqueda, handleSearch, categorias, categoriaSeleccionada, setCategoriaSeleccionada }) {
   return (
     <>
@@ -113,9 +113,9 @@ function App() {
   const [showRegister, setShowRegister] = useState(false);
   const [productoAEditar, setProductoAEditar] = useState(null);
   const [modalVentaOpen, setModalVentaOpen] = useState(false);
-  const [modalLogoutOpen, setModalLogoutOpen] = useState(false); // Nuevo estado para el modal de logout
-  const [loading, setLoading] = useState(false); // Nuevo estado para loading
-  const [categoriaSeleccionada, setCategoriaSeleccionada] = useState(''); // Estado para la categoría seleccionada
+  const [modalLogoutOpen, setModalLogoutOpen] = useState(false);
+  const [loading, setLoading] = useState(false);
+  const [categoriaSeleccionada, setCategoriaSeleccionada] = useState('');
   const [categorias, setCategorias] = useState([]);
 
   const location = useLocation();
@@ -125,7 +125,7 @@ function App() {
   useEffect(() => {
     setLoading(true);
     // Espera a que el render termine y oculta el loader
-    const timeout = setTimeout(() => setLoading(false), 400); // 400ms para que se note la transición
+    const timeout = setTimeout(() => setLoading(false), 400);
     return () => clearTimeout(timeout);
   }, [location.pathname]);
 
@@ -152,7 +152,7 @@ function App() {
   // Carga productos desde el servicio
   useEffect(() => {
     setLoading(true);
-    setTimeout(() => { // Simula 1.5 segundos de carga
+    setTimeout(() => { 
       obtenerProductos()
         .then(data => {
           setProductos(data);
@@ -205,7 +205,7 @@ function App() {
   // Carga las categorías disponibles
   useEffect(() => {
     obtenerCategorias()
-      .then(data => setCategorias(data)) // <-- Guarda los objetos completos
+      .then(data => setCategorias(data))
       .catch(() => setCategorias([]));
   }, []);
 
@@ -281,7 +281,7 @@ function App() {
     }
   };
 
-  // --- Handler de pago (puedes crear un servicio para compras si lo deseas) ---
+  // --- Handler de pago  ---
   const handlePay = async () => {
     if (cart.length === 0) {
       alert('No hay productos en el carrito');
@@ -298,7 +298,7 @@ function App() {
       if (data.success) {
         showToast('¡Stock actualizado!');
         setCart([]);
-        setModalVentaOpen(true); // <-- Abre el modal de éxito
+        setModalVentaOpen(true);
         const nuevoHistorial = await obtenerHistorial(usuario.id);
         setHistorial(nuevoHistorial);
       } else {
@@ -329,7 +329,6 @@ function App() {
   };
 
   // --- Renderizado principal con rutas ---
-  // Mueve esto arriba:
   const productosVisibles = isAdmin
     ? productos
     : productos.filter(p => p.estado === 1);
@@ -344,7 +343,6 @@ function App() {
     };
   });
 
-  // Ahora filtra sobre productosConCategoria
   const productosFiltradosPorCategoria = productosVisibles.filter(p =>
     (!categoriaSeleccionada ||
       (p.categoria_nombre &&
@@ -413,7 +411,7 @@ function App() {
         cartCount={cart.reduce((sum, item) => sum + item.cantidad, 0)}
         onCartClick={() => navigate('/carrito')}
         onHistoryClick={() => navigate('/historial')}
-        onLogout={() => setModalLogoutOpen(true)} // Cambia aquí para mostrar el modal
+        onLogout={() => setModalLogoutOpen(true)}
         onAddProduct={() => navigate('/agregar-producto')}
         onAddCategory={() => navigate('/agregar-categoria')}
         onAddProvider={() => navigate('/agregar-proveedor')}
@@ -442,7 +440,7 @@ function App() {
             busqueda={busqueda}
             setBusqueda={setBusqueda}
             handleSearch={handleSearch}
-            categorias={categorias} // <-- Cambia esto
+            categorias={categorias}
             categoriaSeleccionada={categoriaSeleccionada}
             setCategoriaSeleccionada={setCategoriaSeleccionada}
           />

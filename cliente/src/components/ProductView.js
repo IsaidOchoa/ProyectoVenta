@@ -14,7 +14,12 @@ function ProductView({ producto, onAddToCart, onSelectProduct, onBack }) {
 
   // Filtrar productos similares (misma categoría, distinto id)
   const similares = productos
-    .filter(p => p.categoria === producto.categoria && p.id !== producto.id)
+    .filter(p =>
+      p.id !== producto.id &&
+      p.categoria_nombre &&
+      producto.categoria_nombre &&
+      p.categoria_nombre.trim().toLowerCase() === producto.categoria_nombre.trim().toLowerCase()
+    )
     .slice(0, 2);
 
   return (
@@ -167,33 +172,36 @@ function ProductView({ producto, onAddToCart, onSelectProduct, onBack }) {
           <div style={{ width: '100%' }}>
             <h3 style={{ fontSize: 20, marginBottom: 12 }}>Productos similares</h3>
             <div style={{ display: 'flex', gap: 16 }}>
-              {similares.length === 0 && <div style={{ color: '#888' }}>No hay productos similares</div>}
-              {similares.map(similar => (
-                <div
-                  key={similar.id}
-                  style={{
-                    flex: 1,
-                    background: '#f7f7f7',
-                    borderRadius: 10,
-                    boxShadow: '0 2px 8px rgba(0,0,0,0.08)',
-                    padding: '1rem',
-                    cursor: 'pointer',
-                    display: 'flex',
-                    flexDirection: 'column',
-                    alignItems: 'center',
-                    transition: 'box-shadow 0.2s',
-                  }}
-                  onClick={() => onSelectProduct(similar)}
-                >
-                  <img
-                    src={`http://localhost/ProyectoVenta/public/uploads/${similar.imagen}`}
-                    alt={similar.nombre}
-                    style={{ width: 90, height: 90, objectFit: 'contain', marginBottom: 10, borderRadius: 6, background: '#fff' }}
-                  />
-                  <div style={{ fontWeight: 'bold', fontSize: 16, textAlign: 'center', marginBottom: 4 }}>{similar.nombre}</div>
-                  <div style={{ color: '#0071ce', fontWeight: 'bold', fontSize: 15 }}>${similar.precio}</div>
-                </div>
-              ))}
+              {similares.length === 0 ? (
+                <div style={{ color: '#888' }}>No se encontraron productos similares</div>
+              ) : (
+                similares.map(similar => (
+                  <div
+                    key={similar.id}
+                    style={{
+                      flex: 1,
+                      background: '#f7f7f7',
+                      borderRadius: 10,
+                      boxShadow: '0 2px 8px rgba(0,0,0,0.08)',
+                      padding: '1rem',
+                      cursor: 'pointer',
+                      display: 'flex',
+                      flexDirection: 'column',
+                      alignItems: 'center',
+                      transition: 'box-shadow 0.2s',
+                    }}
+                    onClick={() => onSelectProduct(similar)}
+                  >
+                    <img
+                      src={`http://localhost/ProyectoVenta/public/uploads/${similar.imagen}`}
+                      alt={similar.nombre}
+                      style={{ width: 90, height: 90, objectFit: 'contain', marginBottom: 10, borderRadius: 6, background: '#fff' }}
+                    />
+                    <div style={{ fontWeight: 'bold', fontSize: 16, textAlign: 'center', marginBottom: 4 }}>{similar.nombre}</div>
+                    <div style={{ color: '#0071ce', fontWeight: 'bold', fontSize: 15 }}>${similar.precio}</div>
+                  </div>
+                ))
+              )}
             </div>
           </div>
         </div>

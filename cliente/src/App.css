@@ -346,3 +346,9 @@ tr:hover {
   transition: background 0.2s;
   cursor: pointer;
 }
+
+/* Limita el alto del menú desplegable del select de categorías */
+select {
+  max-height: 12.5rem; /* 6 opciones de ~2rem cada una */
+  overflow-y: auto;
+}

@@ -1,4 +1,4 @@
-import React, { useEffect, useState } from 'react';
+import React, { useEffect, useState, useRef } from 'react';
 import { obtenerCategorias, crearCategoria, actualizarCategoria, eliminarCategoria } from '../services/CategoriasService';
 
 function CategoriesView({ onBack }) {
@@ -10,8 +10,22 @@ function CategoriesView({ onBack }) {
   const [agregando, setAgregando] = useState(false);
   const [selectedRow, setSelectedRow] = useState(null);
 
+  const tableRef = useRef(null);
+
   useEffect(() => {
     obtenerCategorias().then(data => setCategorias(Array.isArray(data) ? data : []));
+  }, []);
+
+  // Deselecciona la fila si se hace clic fuera de la tabla
+  useEffect(() => {
+    function handleClickOutside(event) {
+      if (tableRef.current && !tableRef.current.contains(event.target)) {
+        setSelectedRow(null);
+        setEditId(null);
+      }
+    }
+    document.addEventListener('mousedown', handleClickOutside);
+    return () => document.removeEventListener('mousedown', handleClickOutside);
   }, []);
 
   const handleEdit = (cat) => {
@@ -116,12 +130,15 @@ function CategoriesView({ onBack }) {
         </button>
       </form>
       {mensaje && <div style={{ marginBottom: 16, color: mensaje.includes('eliminada') || mensaje.includes('actualizada') || mensaje.includes('agregada') ? 'green' : 'red' }}>{mensaje}</div>}
-      <table style={{ width: '100%', borderCollapse: 'collapse' }}>
+      <table
+        ref={tableRef}
+        style={{ width: '100%', borderCollapse: 'collapse' }}
+      >
         <thead>
           <tr style={{ background: '#f4f4f4' }}>
             <th style={{ width: 80, textAlign: 'center' }}>ID</th>
-            <th style={{ textAlign: 'center', paddingLeft: 16 }}>Nombre</th>
-            <th style={{ textAlign: 'center' }}>Acción</th>
+            <th style={{ textAlign: 'center', paddingLeft: 16, width: '60%' }}>Nombre</th>
+            <th style={{ textAlign: 'center', width: 160 }}>Acción</th>
           </tr>
         </thead>
         <tbody>
@@ -132,7 +149,7 @@ function CategoriesView({ onBack }) {
               onClick={() => setSelectedRow(cat.id)}
             >
               <td style={{ width: 80, textAlign: 'center' }}>{cat.id}</td>
-              <td style={{ textAlign: 'center', paddingLeft: 16 }}>
+              <td style={{ textAlign: 'center', paddingLeft: 16, width: '60%' }}>
                 {editId === cat.id ? (
                   <input
                     value={editNombre}
@@ -141,37 +158,39 @@ function CategoriesView({ onBack }) {
                   />
                 ) : cat.nombre_categoria}
               </td>
-              <td style={{ textAlign: 'center' }}>
-                {editId === cat.id ? (
-                  <>
-                    <button
-                      style={{ background: '#0071ce', color: '#fff', border: 'none', borderRadius: 6, padding: '0.4rem 1rem', marginRight: 8, cursor: 'pointer' }}
-                      onClick={() => handleSave(cat)}
-                    >
-                      Guardar
-                    </button>
-                    <button
-                      style={{ background: '#888', color: '#fff', border: 'none', borderRadius: 6, padding: '0.4rem 1rem', cursor: 'pointer' }}
-                      onClick={() => setEditId(null)}
-                    >
-                      Cancelar
-                    </button>
-                  </>
-                ) : (
-                  <>
-                    <button
-                      style={{ background: '#0071ce', color: '#fff', border: 'none', borderRadius: 6, padding: '0.4rem 1rem', marginRight: 8, cursor: 'pointer' }}
-                      onClick={() => handleEdit(cat)}
-                    >
-                      Editar
-                    </button>
-                    <button
-                      style={{ background: '#e53935', color: '#fff', border: 'none', borderRadius: 6, padding: '0.4rem 1rem', cursor: 'pointer' }}
-                      onClick={() => handleDelete(cat)}
-                    >
-                      Eliminar
-                    </button>
-                  </>
+              <td style={{ textAlign: 'center', width: 160 }}>
+                {selectedRow === cat.id && (
+                  editId === cat.id ? (
+                    <>
+                      <button
+                        style={{ background: '#0071ce', color: '#fff', border: 'none', borderRadius: 6, padding: '0.4rem 1rem', marginRight: 8, cursor: 'pointer' }}
+                        onClick={() => handleSave(cat)}
+                      >
+                        Guardar
+                      </button>
+                      <button
+                        style={{ background: '#888', color: '#fff', border: 'none', borderRadius: 6, padding: '0.4rem 1rem', cursor: 'pointer' }}
+                        onClick={() => setEditId(null)}
+                      >
+                        Cancelar
+                      </button>
+                    </>
+                  ) : (
+                    <>
+                      <button
+                        style={{ background: '#0071ce', color: '#fff', border: 'none', borderRadius: 6, padding: '0.4rem 1rem', marginRight: 8, cursor: 'pointer' }}
+                        onClick={() => handleEdit(cat)}
+                      >
+                        Editar
+                      </button>
+                      <button
+                        style={{ background: '#e53935', color: '#fff', border: 'none', borderRadius: 6, padding: '0.4rem 1rem', cursor: 'pointer' }}
+                        onClick={() => handleDelete(cat)}
+                      >
+                        Eliminar
+                      </button>
+                    </>
+                  )
                 )}
               </td>
             </tr>
